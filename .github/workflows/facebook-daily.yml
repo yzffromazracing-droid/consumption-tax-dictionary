@@ -1,0 +1,27 @@
+name: Facebook daily post
+
+on:
+  schedule:
+    # 毎日 8:47 JST（23:47 UTC）。毎時0分は混雑で遅れやすいのでずらしている
+    - cron: "47 23 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "投稿せずに本文だけ表示する"
+        type: boolean
+        default: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Post to Facebook page
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node scripts/facebook-post.js ${{ inputs.dry_run && '--dry-run' || '' }}
