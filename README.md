@@ -54,7 +54,7 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 1. Facebookページを用意し、Meta for Developers でアプリを作成して `pages_manage_posts` 権限付きの**長期ページアクセストークン**を取得する（個人プロフィールへの投稿はAPIで不可。ページのみ）。
 2. リポジトリの Settings → Secrets and variables → Actions に登録する。
    - Secrets：`FB_PAGE_ID`（ページID）、`FB_PAGE_ACCESS_TOKEN`（ページアクセストークン）
-   - Variables（任意）：`SITE_URL`（投稿に添えるサイトのURL。GitHub Pages のURLなど）
+   - Variables（任意）：`SITE_URL`（投稿に添えるサイトのURL。未設定なら GitHub Pages の `https://yzffromazracing-droid.github.io/consumption-tax-dictionary/`）
 3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文と画像（実行結果の Artifacts の `card`）を確認し、その後チェックなしで実行して投稿を確認する。
 
 手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`、`node scripts/facebook-image.js card.svg --date=2026-10-12`（SVGならブラウザで開ける）
