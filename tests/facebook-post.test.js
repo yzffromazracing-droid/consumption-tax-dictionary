@@ -33,3 +33,26 @@ test("全項目の投稿本文に名前・区分・説明が入り、Facebookの
 test("SITE_URL がなければリンクを入れない", () => {
   assert.doesNotMatch(buildMessage(ITEMS[0], ""), /https?:/);
 });
+
+test("画像があれば /photos に写真と説明文を送る", async (t) => {
+  const { post } = require("../scripts/facebook-post.js");
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const img = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "fb-")), "card.png");
+  fs.writeFileSync(img, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const calls = [];
+  t.mock.method(globalThis, "fetch", async (url, opts) => {
+    calls.push({ url, body: opts.body });
+    return new Response(JSON.stringify({ id: "1", post_id: "p_1" }), { status: 200 });
+  });
+
+  await post("123", "tok", "本文", "https://example.com/", "v23.0", img);
+  assert.equal(calls[0].url, "https://graph.facebook.com/v23.0/123/photos");
+  assert.equal(calls[0].body.get("caption"), "本文");
+  assert.equal(calls[0].body.get("source").size, 4);
+
+  await post("123", "tok", "本文", "https://example.com/", "v23.0", "");
+  assert.equal(calls[1].url, "https://graph.facebook.com/v23.0/123/feed");
+  assert.equal(calls[1].body.get("link"), "https://example.com/");
+});

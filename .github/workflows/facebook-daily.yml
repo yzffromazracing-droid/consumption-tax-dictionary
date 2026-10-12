@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "投稿せずに本文だけ表示する"
+        description: "投稿せずに本文と画像だけ作る（画像は実行結果の Artifacts からダウンロード）"
         type: boolean
         default: false
 
@@ -19,9 +19,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install SVG renderer and Japanese fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends librsvg2-bin fonts-noto-cjk
+      - name: Make illustration card
+        # 画像が作れなくても文章だけで投稿する
+        continue-on-error: true
+        run: node scripts/facebook-image.js "$RUNNER_TEMP/card.png"
       - name: Post to Facebook page
         env:
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
           SITE_URL: ${{ vars.SITE_URL }}
-        run: node scripts/facebook-post.js ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node scripts/facebook-post.js --image="$RUNNER_TEMP/card.png" ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Upload card image
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: card
+          path: ${{ runner.temp }}/card.png
+          if-no-files-found: ignore
