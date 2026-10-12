@@ -44,19 +44,20 @@ npm run update-invoice   # 国税庁ホームページからインボイスの�
 | `scripts/fetch-invoice.js` | 国税庁ホームページからインボイスの概要（HTML）とQ&A（PDF）を取得 |
 | `scripts/build-invoice.js` | 取得したHTML・PDFから `js/invoice.js` を生成（PDFのテキスト抽出に pdftotext を使用） |
 | `scripts/facebook-post.js` | 辞書の項目を1日1件Facebookページに投稿（`.github/workflows/facebook-daily.yml` から毎日実行） |
+| `scripts/facebook-image.js` | 投稿に添える図解カード（項目名・区分・勘定科目・具体例と区分ごとの挿絵、1080×1080のPNG）を生成（`rsvg-convert` と日本語フォントが必要） |
 | `tests/` | `node --test` によるテスト |
 
 ## Facebookへの毎日自動投稿
 
-GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつFacebookページへ投稿します（160日で一巡）。
+GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつ図解カードの画像付きでFacebookページへ投稿します（160日で一巡）。画像が作れなかった日は文章だけで投稿します。
 
 1. Facebookページを用意し、Meta for Developers でアプリを作成して `pages_manage_posts` 権限付きの**長期ページアクセストークン**を取得する（個人プロフィールへの投稿はAPIで不可。ページのみ）。
 2. リポジトリの Settings → Secrets and variables → Actions に登録する。
    - Secrets：`FB_PAGE_ID`（ページID）、`FB_PAGE_ACCESS_TOKEN`（ページアクセストークン）
    - Variables（任意）：`SITE_URL`（投稿に添えるサイトのURL。GitHub Pages のURLなど）
-3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文を確認し、その後チェックなしで実行して投稿を確認する。
+3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文と画像（実行結果の Artifacts の `card`）を確認し、その後チェックなしで実行して投稿を確認する。
 
-手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`
+手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`、`node scripts/facebook-image.js card.svg --date=2026-10-12`（SVGならブラウザで開ける）
 
 ## 国税庁の記事データ
 

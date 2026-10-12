@@ -2,7 +2,7 @@
 /*
  * 辞書の項目を1日1件、Facebookページに投稿する。
  *
- *   node scripts/facebook-post.js [--dry-run] [--date=YYYY-MM-DD]
+ *   node scripts/facebook-post.js [--dry-run] [--date=YYYY-MM-DD] [--image=画像.png]
  *
  * 環境変数:
  *   FB_PAGE_ID           : 投稿先のFacebookページID
@@ -11,10 +11,13 @@
  *   FB_GRAPH_VERSION     : Graph APIのバージョン（任意。既定 v23.0）
  *
  * 項目は日付（日本時間）から決まるので、160日で全項目を一巡する。
+ * --image を指定し、そのファイルがあれば写真付きで投稿する（本文は写真の説明文になる）。
  * --dry-run またはトークン未設定のときは投稿せず本文を表示するだけ。
  */
 "use strict";
 
+var fs = require("fs");
+var path = require("path");
 var data = require("../js/data.js");
 
 var DAY_MS = 24 * 60 * 60 * 1000;
@@ -71,10 +74,22 @@ function buildMessage(item, siteUrl) {
   return lines.join("\n");
 }
 
-async function post(pageId, token, message, link, version) {
-  var url = "https://graph.facebook.com/" + (version || "v23.0") + "/" + encodeURIComponent(pageId) + "/feed";
-  var body = new URLSearchParams({ message: message, access_token: token });
-  if (link) body.set("link", link);
+async function post(pageId, token, message, link, version, imageFile) {
+  var base = "https://graph.facebook.com/" + (version || "v23.0") + "/" + encodeURIComponent(pageId);
+  var url;
+  var body;
+  if (imageFile) {
+    // 写真投稿。リンクは本文中のURLで代える
+    url = base + "/photos";
+    body = new FormData();
+    body.set("caption", message);
+    body.set("access_token", token);
+    body.set("source", new Blob([fs.readFileSync(imageFile)], { type: "image/png" }), path.basename(imageFile));
+  } else {
+    url = base + "/feed";
+    body = new URLSearchParams({ message: message, access_token: token });
+    if (link) body.set("link", link);
+  }
   var res = await fetch(url, { method: "POST", body: body });
   var json = await res.json().catch(function () { return {}; });
   if (!res.ok || json.error) {
@@ -88,6 +103,12 @@ async function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
   var dateArg = args.filter(function (a) { return a.indexOf("--date=") === 0; })[0];
+  var imageArg = args.filter(function (a) { return a.indexOf("--image=") === 0; })[0];
+  var imageFile = imageArg ? imageArg.slice(8) : "";
+  if (imageFile && !fs.existsSync(imageFile)) {
+    console.error(imageFile + " がないため写真なしで投稿します。");
+    imageFile = "";
+  }
   // --date は日本時間のその日の正午として扱う
   var date = dateArg ? new Date(dateArg.slice(7) + "T12:00:00+09:00") : new Date();
   if (isNaN(date.getTime())) {
@@ -107,8 +128,8 @@ async function main() {
     return;
   }
 
-  var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION);
-  console.log("posted: " + result.id + " (" + item.name + ")");
+  var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
+  console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
 
 if (require.main === module) {
@@ -118,4 +139,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, post: post };
