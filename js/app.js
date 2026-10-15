@@ -568,9 +568,17 @@
 
   $("item-total").textContent = "収録 " + ITEMS.length + " 項目";
 
-  // 国税庁の記事タブのお知らせ（こども家庭庁の消費税関連記事）
+  // こども家庭庁タブ（各記事と、その記事を関連記事にしている辞書項目）
   TAX_DATA.CFA_ARTICLES.forEach(function (a) {
-    $("cfa-notice-list").appendChild(el("li", {}, [externalLink(a.url, a.title)]));
+    var uses = ITEMS.filter(function (item) {
+      return item.cfaRefs && item.cfaRefs.indexOf(a.id) !== -1;
+    }).map(function (item) {
+      return item.name;
+    });
+    $("cfa-list").appendChild(el("li", { class: "item item-cfa" }, [
+      externalLink(a.url, a.title, "cfa-title"),
+      uses.length ? el("p", { class: "cfa-uses", text: "辞書の関連項目：" + uses.join("、") }) : null,
+    ]));
   });
 
   buildFilters();

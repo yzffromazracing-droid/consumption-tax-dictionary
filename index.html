@@ -16,6 +16,7 @@
       <button class="tab" role="tab" data-tab="guide" aria-selected="false">区分の解説</button>
       <button class="tab" role="tab" data-tab="tsu" aria-selected="false">通達</button>
       <button class="tab" role="tab" data-tab="nta" aria-selected="false">国税庁の記事</button>
+      <button class="tab" role="tab" data-tab="cfa" aria-selected="false">こども家庭庁</button>
       <button class="tab" role="tab" data-tab="inv" aria-selected="false">インボイス</button>
     </nav>
   </header>
@@ -94,12 +95,6 @@
 
     <!-- 国税庁の記事 -->
     <section id="tab-nta" class="panel" role="tabpanel" hidden>
-      <aside class="notice" aria-labelledby="cfa-notice-title">
-        <h2 id="cfa-notice-title" class="notice-title">お知らせ：こども家庭庁の消費税関連記事</h2>
-        <p class="notice-lead">保育・児童福祉に関する消費税の取扱い（非課税措置など）は、こども家庭庁のホームページにも掲載されています。</p>
-        <ul id="cfa-notice-list" class="notice-list"></ul>
-        <p class="notice-source">出典：<a href="https://www.cfa.go.jp/" target="_blank" rel="noopener">こども家庭庁ホームページ</a></p>
-      </aside>
       <div class="search-box">
         <input id="nta-q" type="search" placeholder="例：6201、簡易課税、インボイス、社宅" autocomplete="off" aria-label="国税庁の記事を検索">
       </div>
@@ -112,6 +107,14 @@
       <p id="nta-count" class="count"></p>
       <ul id="nta-results" class="results"></ul>
       <p class="source">出典：<a href="https://www.nta.go.jp/" target="_blank" rel="noopener">国税庁ホームページ</a>（タックスアンサー・質疑応答事例「消費税」）　取得日：<span id="nta-fetched"></span><br>要旨は各記事の冒頭部分を抜粋したものです。内容は必ずリンク先の原文でご確認ください。</p>
+    </section>
+
+    <!-- こども家庭庁 -->
+    <section id="tab-cfa" class="panel" role="tabpanel" hidden>
+      <h2 class="section-title">こども家庭庁の消費税関連記事</h2>
+      <p class="lead">保育・児童福祉に関する消費税の取扱い（認可外保育施設の利用料の非課税措置など）について、こども家庭庁ホームページに掲載されている記事です。</p>
+      <ul id="cfa-list" class="results"></ul>
+      <p class="source">出典：<a href="https://www.cfa.go.jp/" target="_blank" rel="noopener">こども家庭庁ホームページ</a><br>内容は必ずリンク先の原文でご確認ください。</p>
     </section>
 
     <!-- インボイス制度 -->
