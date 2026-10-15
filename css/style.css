@@ -341,30 +341,8 @@ h4.inv-heading { font-size: 0.92rem; }
 
 .site-footer { padding-bottom: 24px; color: var(--muted); font-size: 0.8rem; }
 
-/* お知らせ（国税庁の記事タブ：広い画面では一覧の右横、狭い画面では一覧の上） */
-#tab-nta { position: relative; }
-.notice {
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  border-radius: 10px;
-  background: var(--surface);
-  font-size: 0.88rem;
-}
-.notice-title { margin: 0 0 6px; font-size: 0.98rem; }
-.notice-lead { margin: 0 0 8px; color: var(--muted); }
-.notice-list { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
-.notice-list a { color: var(--accent); }
-.notice-source { margin: 10px 0 0; color: var(--muted); font-size: 0.8rem; }
-.notice-source a { color: inherit; }
-
-@media (min-width: 1440px) {
-  .notice {
-    position: absolute;
-    top: 16px;
-    left: calc(100% + 8px);
-    width: 280px;
-    margin-bottom: 0;
-  }
-}
+/* こども家庭庁タブ */
+.lead { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+.item-cfa { border-left-color: var(--accent); padding: 12px 14px; }
+.cfa-title { font-weight: 600; color: var(--accent); }
+.cfa-uses { margin: 6px 0 0; color: var(--muted); font-size: 0.82rem; }
