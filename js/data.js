@@ -21,6 +21,7 @@
  *   note     : 注意点（任意）
  *   tsutatsu : 関連する消費税法基本通達の番号（任意。js/tsutatsu.js に収録されているもの）
  *   refs     : 国税庁の関連記事のURL（任意。js/nta.js に収録されているもの）
+ *   cfaRefs  : こども家庭庁の関連記事のID（任意。CFA_ARTICLES に定義したもの）
  */
 (function (root) {
   "use strict";
@@ -2190,6 +2191,7 @@
         "https://www.nta.go.jp/law/shitsugi/shohi/10/05.htm",
       ],
       tsutatsu: ["6－7－5", "6－7－7", "6－7－7の2"],
+      cfaRefs: ["zeisei-r6", "zeisei-r8", "ninkagai-tsuuchi"],
     },
     {
       name: "助産（出産費用）",
@@ -2364,6 +2366,7 @@
         "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6215.htm",
       ],
       tsutatsu: ["6－7－7の2"],
+      cfaRefs: ["ninkagai-tsuuchi", "hikazei-r6", "hikazei-r5", "mushouka-faq"],
     },
     {
       name: "大学等の正規授業の聴講料（社員研修）",
@@ -3103,7 +3106,41 @@
     },
   ];
 
-  var data = { CATEGORIES: CATEGORIES, KANI_TYPES: KANI_TYPES, ITEMS: ITEMS };
+  // こども家庭庁ホームページの消費税関連記事（国税庁の記事タブのお知らせと、辞書項目の cfaRefs で使う）
+  var CFA_ARTICLES = [
+    {
+      id: "ninkagai-tsuuchi",
+      title: "認可外保育施設に関する通知・事務連絡等",
+      url: "https://www.cfa.go.jp/policies/hoiku/ninkagai/tsuuchi/",
+    },
+    {
+      id: "hikazei-r6",
+      title: "「一定の認可外保育施設の利用料に係る消費税の非課税措置の施行について」の一部改正について（令和6年3月29日 こ成保第219号）",
+      url: "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/1b9d7664-123f-45d6-aea0-b6fbaf7ff788/c34587f4/20230401_policies_hoiku_ninkagai-tsuuchi_20.pdf",
+    },
+    {
+      id: "hikazei-r5",
+      title: "「一定の認可外保育施設の利用料に係る消費税の非課税措置の施行について」の一部改正について（令和5年4月1日 こ成保第3号）",
+      url: "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/0feeb7e3-8cce-4112-a99b-c3c3f49e92f4/fab2c709/20240112_councils_shingikai_kodomo_sodachi_azukari_service_Oq36ih41_03.pdf",
+    },
+    {
+      id: "mushouka-faq",
+      title: "幼児教育・保育の無償化に関する自治体向けFAQ【2024年7月1日版】",
+      url: "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/fbea17f8-33d0-4a70-8ea6-84f3402bad73/15f5e496/20240711_policies_kokoseido_mushouka_23.pdf",
+    },
+    {
+      id: "zeisei-r6",
+      title: "令和6年度税制改正の概要（令和5年12月）",
+      url: "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/88749a20-e454-4a5b-9da8-3a32e1788a23/009f8c95/20231227_policies_budget_17.pdf",
+    },
+    {
+      id: "zeisei-r8",
+      title: "令和8年度税制改正の概要（令和7年12月）",
+      url: "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/88749a20-e454-4a5b-9da8-3a32e1788a23/078d65e3/20251224_policies_budget_91.pdf",
+    },
+  ];
+
+  var data = { CATEGORIES: CATEGORIES, KANI_TYPES: KANI_TYPES, ITEMS: ITEMS, CFA_ARTICLES: CFA_ARTICLES };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = data;

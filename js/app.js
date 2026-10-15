@@ -4,6 +4,10 @@
   var CATEGORIES = TAX_DATA.CATEGORIES;
   var KANI_TYPES = TAX_DATA.KANI_TYPES;
   var ITEMS = TAX_DATA.ITEMS;
+  var CFA_BY_ID = {};
+  TAX_DATA.CFA_ARTICLES.forEach(function (a) {
+    CFA_BY_ID[a.id] = a;
+  });
   var CAT_ORDER = ["k10", "k8", "hi", "fu", "men"];
   var NTA = typeof NTA_DATA !== "undefined" ? NTA_DATA : { FETCHED_AT: "", TYPES: {}, ARTICLES: [] };
   var TSUTATSU = typeof TSUTATSU_DATA !== "undefined" ? TSUTATSU_DATA : { FETCHED_AT: "", TYPES: {}, ARTICLES: [] };
@@ -104,6 +108,17 @@
     return el("div", {}, [el("p", { class: "refs-title", text: "国税庁の関連記事" }), list]);
   }
 
+  function renderCfaRefs(item) {
+    if (!item.cfaRefs || !item.cfaRefs.length) return null;
+    var list = el("ul", { class: "refs" });
+    item.cfaRefs.forEach(function (id) {
+      var a = CFA_BY_ID[id];
+      if (a) list.appendChild(el("li", {}, [externalLink(a.url, a.title)]));
+    });
+    if (!list.children.length) return null;
+    return el("div", {}, [el("p", { class: "refs-title", text: "こども家庭庁の関連記事" }), list]);
+  }
+
   function renderExamples(item) {
     if (!item.examples || !item.examples.length) return null;
     var list = el("ul", { class: "examples" });
@@ -184,6 +199,7 @@
       ]),
       renderTsutatsuRefs(item),
       renderRefs(item),
+      renderCfaRefs(item),
     ]);
     var summary = el("summary", { class: "item-head" }, [
       badge(item.cat),
@@ -551,6 +567,11 @@
   });
 
   $("item-total").textContent = "収録 " + ITEMS.length + " 項目";
+
+  // 国税庁の記事タブのお知らせ（こども家庭庁の消費税関連記事）
+  TAX_DATA.CFA_ARTICLES.forEach(function (a) {
+    $("cfa-notice-list").appendChild(el("li", {}, [externalLink(a.url, a.title)]));
+  });
 
   buildFilters();
   render();
