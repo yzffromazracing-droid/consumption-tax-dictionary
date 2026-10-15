@@ -53,3 +53,28 @@ test("簡易課税の事業区分は第1種〜第6種で、課税・免税の項
   const used = new Set(ITEMS.flatMap((i) => (i.kani || []).map((r) => r[0])));
   assert.deepEqual([...used].sort(), [1, 2, 3, 4, 5, 6]);
 });
+
+test("こども家庭庁の記事は ID・タイトル・URL がそろい、ID が重複しない", () => {
+  const { CFA_ARTICLES } = require("../js/data.js");
+  assert.ok(CFA_ARTICLES.length > 0);
+  const ids = CFA_ARTICLES.map((a) => a.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const a of CFA_ARTICLES) {
+    assert.ok(a.id && a.title, `${a.id}: タイトルがない`);
+    assert.match(a.url, /^https:\/\/www\.cfa\.go\.jp\//, `${a.id}: URL がこども家庭庁ではない`);
+  }
+});
+
+test("辞書項目の cfaRefs はすべて CFA_ARTICLES に存在する記事", () => {
+  const { CFA_ARTICLES } = require("../js/data.js");
+  const ids = new Set(CFA_ARTICLES.map((a) => a.id));
+  let count = 0;
+  for (const item of ITEMS) {
+    if (item.cfaRefs === undefined) continue;
+    count++;
+    assert.ok(Array.isArray(item.cfaRefs) && item.cfaRefs.length, `${item.name}: cfaRefs が空`);
+    assert.equal(new Set(item.cfaRefs).size, item.cfaRefs.length, `${item.name}: cfaRefs が重複`);
+    for (const id of item.cfaRefs) assert.ok(ids.has(id), `${item.name}: ${id} が CFA_ARTICLES にない`);
+  }
+  assert.ok(count > 0, "cfaRefs が1件もない");
+});

@@ -31,7 +31,7 @@ npm run update-invoice   # 国税庁ホームページからインボイスの�
 | --- | --- |
 | `index.html` | 画面 |
 | `css/style.css` | スタイル（ダークモード対応） |
-| `js/data.js` | 区分データ（項目の追加・修正はここ。`tsutatsu` に関連する基本通達の番号、`refs` に国税庁の関連記事のURL） |
+| `js/data.js` | 区分データ（項目の追加・修正はここ。`tsutatsu` に関連する基本通達の番号、`refs` に国税庁の関連記事のURL、`cfaRefs` にこども家庭庁の関連記事のID（記事は `CFA_ARTICLES` に定義）） |
 | `js/nta.js` | 国税庁の記事一覧（自動生成。手で編集しない） |
 | `js/tsutatsu.js` | 消費税法基本通達・取扱通達（自動生成。手で編集しない） |
 | `js/invoice.js` | インボイス制度の概要・Q&A（自動生成。手で編集しない） |
