@@ -11,6 +11,7 @@
   var CAT_ORDER = ["k10", "k8", "hi", "fu", "men"];
   var NTA = typeof NTA_DATA !== "undefined" ? NTA_DATA : { FETCHED_AT: "", TYPES: {}, ARTICLES: [] };
   var TSUTATSU = typeof TSUTATSU_DATA !== "undefined" ? TSUTATSU_DATA : { FETCHED_AT: "", TYPES: {}, ARTICLES: [] };
+  var KANI = typeof KANI_DATA !== "undefined" ? KANI_DATA : { FETCHED_AT: "", SOURCES: [], TYPES: {}, ENTRIES: [] };
   var INVOICE = typeof INVOICE_DATA !== "undefined" ? INVOICE_DATA : { FETCHED_AT: "", OVERVIEW: [], QA: [] };
   var ARTICLE_BY_URL = {};
   NTA.ARTICLES.forEach(function (a) {
@@ -518,6 +519,148 @@
     renderList(true);
   }
 
+  /* ---------- 簡易課税の事業区分 ---------- */
+
+  var KANI_PREVIEW = 8; // 検索語がないとき、各区分で最初に表示する件数
+  var KANI_KIND = { i: "業種", n: "留意事項", e: "具体例", c: "事例" };
+
+  function kaniTypeLabel(types) {
+    return types
+      .map(function (n) {
+        return KANI_TYPES[n].label.replace("事業", "");
+      })
+      .join("または");
+  }
+
+  function renderKaniEntry(entry, type) {
+    var src = KANI.SOURCES[entry.src];
+    var kind = entry.of ? "e" : entry.k; // 留意事項の〔例〕は具体例として表示
+    var head = [el("span", { class: "kani-kind-tag kani-kind-" + kind, text: KANI_KIND[kind] })];
+    // 複数の区分にまたがる・「おおむね」の場合は区分を明示する
+    if (entry.t.length > 1 || entry.approx) {
+      head.push(el("span", { class: "kani-also", text: (entry.approx ? "おおむね" : "") + kaniTypeLabel(entry.t) }));
+    }
+    var body = [el("div", { class: "kani-entry-head" }, head)];
+    if (entry.k === "i") {
+      body.push(el("p", { class: "kani-entry-title", text: entry.min.join("・") }));
+      body.push(el("p", { class: "kani-entry-sub", text: "日本標準産業分類　" + entry.maj + " › " + entry.mid }));
+      if (entry.kw) body.push(el("p", { class: "kani-entry-sub", text: "関連語：" + entry.kw.join("、") }));
+    } else {
+      if (entry.title) body.push(el("p", { class: "kani-entry-title", text: entry.title }));
+      body.push(el("p", { class: "kani-entry-text", text: entry.text }));
+      if (entry.of) body.push(el("p", { class: "kani-entry-sub", text: "「" + entry.of + "」の例" }));
+      if (entry.min) body.push(el("p", { class: "kani-entry-sub", text: "業種：" + entry.min.join("・") }));
+    }
+    if (src) body.push(el("p", { class: "kani-entry-src" }, [externalLink(src.url, src.title + " ↗")]));
+    return el("li", { class: "item kani-entry kani-entry-" + type }, body);
+  }
+
+  function setupKaniTab() {
+    var st = { q: "", type: "", expanded: {} };
+    var chips = $("kani-type-filters");
+    [{ code: "", label: "すべて" }]
+      .concat(
+        [1, 2, 3, 4, 5, 6].map(function (n) {
+          var t = KANI_TYPES[n];
+          return { code: String(n), label: t.label.replace("事業", "") + " " + t.kind };
+        })
+      )
+      .forEach(function (c) {
+        var btn = el("button", {
+          class: "chip" + (c.code === st.type ? " is-active" : ""),
+          type: "button",
+          "data-type": c.code,
+          "aria-pressed": String(c.code === st.type),
+          text: c.label,
+        });
+        btn.addEventListener("click", function () {
+          st.type = c.code;
+          Array.prototype.forEach.call(chips.children, function (b) {
+            var active = b.getAttribute("data-type") === st.type;
+            b.classList.toggle("is-active", active);
+            b.setAttribute("aria-pressed", String(active));
+          });
+          render();
+        });
+        chips.appendChild(btn);
+      });
+    $("kani-q").addEventListener("input", function (e) {
+      st.q = e.target.value;
+      st.expanded = {};
+      render();
+    });
+
+    function renderSection(n, entries) {
+      var t = KANI_TYPES[n];
+      var info = KANI.TYPES[n] || { def: "", points: [] };
+      var head = el("div", { class: "kani-sec-head" }, [
+        el("span", { class: "kani-type kani-" + n }, [
+          el("span", { text: t.label.replace("事業", "") + " " + t.rate }),
+          el("span", { class: "kani-kind", text: t.kind }),
+        ]),
+        el("div", { class: "kani-sec-def" }, [
+          el("p", { class: "kani-sec-title", text: t.label + "（" + t.kind + "）みなし仕入率 " + t.rate }),
+          el("p", { class: "kani-sec-text", text: info.def }),
+        ]),
+      ]);
+      var children = [head];
+      if (info.points.length) {
+        var pts = el("ul", { class: "kani-points" });
+        info.points.forEach(function (p) {
+          pts.appendChild(el("li", { text: p }));
+        });
+        children.push(el("details", { class: "kani-points-box" }, [el("summary", { text: "判定のポイント（No.6509）" }), pts]));
+      }
+      var list = el("ul", { class: "results kani-list" });
+      var limit = st.q || st.type || st.expanded[n] ? entries.length : KANI_PREVIEW;
+      entries.slice(0, limit).forEach(function (e) {
+        list.appendChild(renderKaniEntry(e, n));
+      });
+      children.push(list);
+      if (entries.length > limit) {
+        var more = el("button", {
+          class: "btn btn-ghost more",
+          type: "button",
+          text: t.label.replace("事業", "") + "をすべて表示（残り " + (entries.length - limit) + " 件）",
+        });
+        more.addEventListener("click", function () {
+          st.expanded[n] = true;
+          render();
+        });
+        children.push(more);
+      }
+      return el("section", { class: "kani-sec", "aria-label": t.label }, children);
+    }
+
+    function render() {
+      var results = TaxSearch.searchKani(KANI.ENTRIES, st.q, { type: st.type });
+      var box = $("kani-results");
+      box.textContent = "";
+      var shown = 0;
+      [1, 2, 3, 4, 5, 6].forEach(function (n) {
+        if (st.type && String(n) !== st.type) return;
+        var entries = results.filter(function (e) {
+          return e.t.indexOf(n) >= 0;
+        });
+        if (!entries.length && st.q) return;
+        shown++;
+        box.appendChild(renderSection(n, entries));
+      });
+      if (!shown) {
+        box.appendChild(
+          el("div", { class: "empty" }, [
+            el("p", { text: "該当する業種・具体例が見つかりませんでした。" }),
+            el("p", { text: "別の言い方（業種名など）で検索するか、各区分の定義から判定してください。" }),
+          ])
+        );
+      }
+      $("kani-count").textContent = st.q ? results.length + " 件" : "収録 " + KANI.ENTRIES.length + " 件";
+    }
+
+    $("kani-fetched").textContent = KANI.FETCHED_AT;
+    render();
+  }
+
   /* ---------- インボイス制度 ---------- */
 
   function renderInvoiceOverview() {
@@ -633,4 +776,5 @@
   });
   renderFlow();
   renderGuide();
+  setupKaniTab();
 })();
