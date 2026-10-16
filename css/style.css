@@ -365,6 +365,7 @@ h4.inv-heading { font-size: 0.92rem; }
 .kani-also { border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
 .kani-entry-title { margin: 0; font-weight: 600; }
 .kani-entry-text { margin: 0; }
+.kani-entry-food { margin: 6px 0 0; padding: 6px 10px; border-radius: 8px; background: var(--bg); font-size: 0.85rem; }
 .kani-entry-sub { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; }
 .kani-entry-src { margin: 4px 0 0; font-size: 0.78rem; }
 .kani-entry-src a { color: var(--muted); }

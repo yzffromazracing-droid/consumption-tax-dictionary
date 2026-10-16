@@ -62,3 +62,12 @@ test("ひらがな・カタカナどちらでも検索できる", () => {
   assert.deepEqual(searchKani(ENTRIES, "くりーにんぐ"), searchKani(ENTRIES, "クリーニング"));
   assert.ok(searchKani(ENTRIES, "クリーニング").length > 0);
 });
+
+test("農林水産業の飲食料品の譲渡は第2種として出てくる", () => {
+  const farming = ENTRIES.filter((e) => e.k === "i" && /^[AB]－/.test(e.maj) && e.t.includes(3));
+  assert.ok(farming.length > 0);
+  assert.ok(farming.every((e) => e.food && e.t.includes(2)), "農林水産業の業種が第2種を含まない");
+  assert.ok(ENTRIES.some((e) => e.k === "n" && e.t.includes(2) && /飲食料品/.test(e.text) && /農林水産業/.test(e.text)));
+  const r = searchKani(ENTRIES, "耕種農業", { type: "2" });
+  assert.ok(r.length > 0, "第2種で絞り込むと耕種農業が出ない");
+});
