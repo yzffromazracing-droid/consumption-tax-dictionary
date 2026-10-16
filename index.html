@@ -14,6 +14,7 @@
       <button class="tab is-active" role="tab" data-tab="dict" aria-selected="true">辞書</button>
       <button class="tab" role="tab" data-tab="flow" aria-selected="false">判定フロー</button>
       <button class="tab" role="tab" data-tab="guide" aria-selected="false">区分の解説</button>
+      <button class="tab" role="tab" data-tab="kani" aria-selected="false">簡易課税</button>
       <button class="tab" role="tab" data-tab="tsu" aria-selected="false">通達</button>
       <button class="tab" role="tab" data-tab="nta" aria-selected="false">国税庁の記事</button>
       <button class="tab" role="tab" data-tab="cfa" aria-selected="false">こども家庭庁</button>
@@ -75,6 +76,21 @@
         </ul>
       </div>
       <p class="disclaimer">本辞書は一般的な取扱いをまとめたもので、個別の契約内容や事実関係によって区分が変わることがあります。最終的な判断は国税庁の資料や税理士にご確認ください。</p>
+    </section>
+
+    <!-- 簡易課税の事業区分 -->
+    <section id="tab-kani" class="panel" role="tabpanel" hidden>
+      <h2 class="section-title">簡易課税の事業区分（第1種〜第6種）</h2>
+      <p class="lead">事業区分は、原則として売上げ（課税資産の譲渡等）ごとに判定します。業種名や取引の内容を入れると、該当する事業区分の業種・具体例を探せます。</p>
+      <div class="search-box">
+        <input id="kani-q" type="search" placeholder="例：植木の剪定、リフォーム、クリーニング、駐車場" autocomplete="off" aria-label="業種・取引で事業区分を検索">
+      </div>
+      <div class="filters">
+        <div id="kani-type-filters" class="chips" aria-label="事業区分で絞り込み"></div>
+      </div>
+      <p id="kani-count" class="count"></p>
+      <div id="kani-results"></div>
+      <p class="source">出典：国税庁ホームページ（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6509.htm" target="_blank" rel="noopener">タックスアンサー No.6509</a>・<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6517.htm" target="_blank" rel="noopener">No.6517</a>、質疑応答事例「簡易課税制度」）　取得日：<span id="kani-fetched"></span><br>日本標準産業分類からみた事業区分は目安で、留意事項に例示のない取引は個別に判定する必要があります。内容は必ずリンク先の原文でご確認ください。</p>
     </section>
 
     <!-- 通達 -->
@@ -145,6 +161,7 @@
   <script src="js/nta.js"></script>
   <script src="js/tsutatsu.js"></script>
   <script src="js/invoice.js"></script>
+  <script src="js/kani.js"></script>
   <script src="js/search.js"></script>
   <script src="js/app.js"></script>
 </body>

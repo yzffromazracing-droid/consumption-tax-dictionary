@@ -124,7 +124,73 @@
     });
   }
 
-  var api = { normalize: normalize, search: search, searchArticles: searchArticles };
+  /* ---------- 簡易課税の事業区分 ---------- */
+
+  // 業種名から産業分類番号（〔011〕など）を除く
+  function industryName(str) {
+    return normalize(String(str || "").replace(/〔\d+〕/g, ""));
+  }
+
+  // 1語に対する事業区分の項目のスコア（0 = 一致なし）
+  function scoreKani(entry, term) {
+    // 業種名で探せるのは業種の項目だけ（留意事項は同じ行の別業種の話のこともあるため本文で探す）
+    var names = entry.k === "i" ? entry.min.concat([entry.mid]) : [];
+    var best = 0;
+    var i;
+    for (i = 0; i < names.length; i++) {
+      var name = industryName(names[i]);
+      if (name === term) best = Math.max(best, 100);
+      else if (name.indexOf(term) >= 0) best = Math.max(best, 70);
+    }
+    if (entry.k === "i") {
+      // 大分類名（「D－建設業」など）そのものの検索は上位に出す
+      var major = normalize(entry.maj.replace(/^[A-Z]－?/, ""));
+      if (major === term || major === term + "業") best = Math.max(best, 95);
+      else if (major.indexOf(term) >= 0) best = Math.max(best, 20);
+    }
+    if (best) return best;
+    var kw = entry.kw || [];
+    for (i = 0; i < kw.length; i++) {
+      var k = normalize(kw[i]);
+      if (k === term) return 90;
+      if (k.indexOf(term) >= 0 || term.indexOf(k) >= 0) best = Math.max(best, 55);
+    }
+    if (best) return best;
+    if (entry.title && normalize(entry.title).indexOf(term) >= 0) return 60;
+    if (entry.text && normalize(entry.text).indexOf(term) >= 0) return 40;
+    if (entry.of && normalize(entry.of).indexOf(term) >= 0) return 15;
+    return 0;
+  }
+
+  /*
+   * 簡易課税の事業区分の項目（業種・留意事項・具体例・事例）を検索する。
+   * options.type : 事業区分（1〜6）で絞り込み
+   * クエリが空なら元の順序のまま絞り込みのみ。
+   */
+  function searchKani(entries, query, options) {
+    options = options || {};
+    var type = options.type ? Number(options.type) : 0;
+    var terms = splitTerms(query);
+    var results = [];
+    entries.forEach(function (entry, index) {
+      if (type && entry.t.indexOf(type) < 0) return;
+      var total = 0;
+      for (var i = 0; i < terms.length; i++) {
+        var s = scoreKani(entry, terms[i]);
+        if (!s) return;
+        total += s;
+      }
+      results.push({ item: entry, score: total, index: index });
+    });
+    results.sort(function (a, b) {
+      return b.score - a.score || a.index - b.index;
+    });
+    return results.map(function (r) {
+      return r.item;
+    });
+  }
+
+  var api = { normalize: normalize, search: search, searchArticles: searchArticles, searchKani: searchKani };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

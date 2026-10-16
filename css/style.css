@@ -72,11 +72,13 @@ main, .site-header > *, .site-footer {
   font-size: 1.25rem;
 }
 
-.tabs { display: flex; gap: 4px; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  flex: 1;
-  padding: 10px 4px;
+  flex: 1 0 auto;
+  padding: 10px 6px;
+  white-space: nowrap;
   border: 0;
   border-bottom: 3px solid transparent;
   background: none;
@@ -90,9 +92,7 @@ main, .site-header > *, .site-footer {
 .tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
 
 @media (max-width: 480px) {
-  .tabs { overflow-x: auto; scrollbar-width: none; }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab { flex: 1 0 auto; padding: 10px 8px; font-size: 0.82rem; white-space: nowrap; }
+  .tab { padding: 10px 8px; font-size: 0.82rem; }
 }
 
 .panel { padding-top: 16px; padding-bottom: 32px; }
@@ -346,3 +346,26 @@ h4.inv-heading { font-size: 0.92rem; }
 .item-cfa { border-left-color: var(--accent); padding: 12px 14px; }
 .cfa-title { font-weight: 600; color: var(--accent); }
 .cfa-uses { margin: 6px 0 0; color: var(--muted); font-size: 0.82rem; }
+
+/* 簡易課税タブ */
+.kani-sec { margin-top: 18px; }
+.kani-sec-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.kani-sec-head .kani-type { font-size: 0.9rem; padding: 4px 8px; min-width: 6.4em; }
+.kani-sec-def { min-width: 0; }
+.kani-sec-title { margin: 0; font-weight: 700; }
+.kani-sec-text { margin: 2px 0 0; font-size: 0.88rem; color: var(--muted); }
+.kani-points-box { margin: 0 0 8px; font-size: 0.86rem; }
+.kani-points-box summary { cursor: pointer; color: var(--accent); }
+.kani-points { margin: 6px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.kani-entry { padding: 10px 14px; border-left-color: var(--accent); }
+.kani-entry-head { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.kani-kind-tag, .kani-also { padding: 0 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; line-height: 1.7; }
+.kani-kind-tag { background: var(--bg); color: var(--muted); }
+.kani-kind-i { background: var(--hi-bg); color: var(--hi); }
+.kani-also { border: 1px solid var(--border); color: var(--muted); font-weight: 600; }
+.kani-entry-title { margin: 0; font-weight: 600; }
+.kani-entry-text { margin: 0; }
+.kani-entry-sub { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; }
+.kani-entry-src { margin: 4px 0 0; font-size: 0.78rem; }
+.kani-entry-src a { color: var(--muted); }
+.kani-sec > .more { margin-top: 8px; }
