@@ -544,6 +544,14 @@
     if (entry.k === "i") {
       body.push(el("p", { class: "kani-entry-title", text: entry.min.join("・") }));
       body.push(el("p", { class: "kani-entry-sub", text: "日本標準産業分類　" + entry.maj + " › " + entry.mid }));
+      if (entry.food) {
+        body.push(
+          el("p", {
+            class: "kani-entry-food",
+            text: "軽減税率の対象となる飲食料品の譲渡に係る部分は第2種事業、それ以外は第3種事業（令和元年10月1日の属する課税期間から）",
+          })
+        );
+      }
       if (entry.kw) body.push(el("p", { class: "kani-entry-sub", text: "関連語：" + entry.kw.join("、") }));
     } else {
       if (entry.title) body.push(el("p", { class: "kani-entry-title", text: entry.title }));

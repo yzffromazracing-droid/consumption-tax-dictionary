@@ -33,6 +33,9 @@ var CASES = {
 
 // 検索用の別名（本辞書で追加。国税庁の資料の内容ではない）。日本標準産業分類の小分類名 → 日常の言い方
 var KEYWORDS = {
+  "耕種農業": ["農家", "米", "野菜", "果物"],
+  "畜産農業": ["酪農", "畜産", "養鶏"],
+  "海面漁業": ["漁師"],
   "園芸サービス業": ["植木", "庭師", "剪定"],
   "木造建築工事業": ["工務店"],
   "建築リフォーム工事業": ["リフォーム", "改装"],
@@ -281,7 +284,19 @@ function noteSentences(html) {
   return out;
 }
 
+// 大分類 A（農業、林業）・B（漁業）：飲食料品の譲渡に係る部分は第2種（令和元年10月1日の属する課税期間から）
+var FOOD_MAJOR = /^[AB]－/;
+
 function buildIndustry(page, html, src) {
+  // 表の前の（注）のうち、飲食料品の譲渡の事業区分に関するもの（農林水産業は第二種事業になる旨）
+  var intro = html.slice(Math.max(0, html.indexOf("【回答要旨】")), html.search(/大分類【/));
+  var noteRe = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+  var nm;
+  while ((nm = noteRe.exec(intro))) {
+    var nt = text(nm[1]).replace(/^\d+\s*/, "");
+    if (/飲食料品/.test(nt) && typesIn(nt).length) entries.push({ k: "n", t: typesIn(nt), text: nt, src: src });
+  }
+
   var majorRe = /大分類【([^】]+)】/g;
   var marks = [];
   var m;
@@ -333,6 +348,10 @@ function buildIndustry(page, html, src) {
       if (!types.length) throw new Error(page.path + ": 事業区分を読み取れません: " + typeText);
       var base = { maj: major, mid: middle, min: minors, src: src };
       var industry = Object.assign({ k: "i", t: types, approx: /おおむね/.test(typeText) }, base);
+      if (FOOD_MAJOR.test(major) && types.indexOf(3) >= 0) {
+        industry.t = [2].concat(types);
+        industry.food = true;
+      }
       var kw = [];
       minors.forEach(function (name) {
         var key = name.replace(/〔\d+〕$/, "");
@@ -399,6 +418,7 @@ var src =
   " * ENTRIES      : k = i（業種：日本標準産業分類）/ n（業種の留意事項）/ e（具体例）/ c（質疑応答の個別事例）\n" +
   " *                t = 該当する区分の配列、approx = 「おおむね」、maj/mid/min = 大・中・小分類、src = SOURCES の添字\n" +
   " *                of = 留意事項の〔例〕の場合、例を挙げている文\n" +
+  " *                food = 農林水産業で、飲食料品の譲渡に係る部分は第2種・それ以外は第3種\n" +
   " *                kw = 検索用の別名（本辞書で追加したもの。国税庁の資料の内容ではない）\n" +
   " */\n" +
   "(function (root) {\n" +
