@@ -24,6 +24,129 @@
       .filter(Boolean);
   }
 
+  // ひらがな（と長音）だけの語か
+  function isAllHiragana(str) {
+    return /^[\u3041-\u3096ー]+$/.test(str);
+  }
+
+  /*
+   * 言い方を変えて探すための語と重み。漢字・カタカナ・英数字を含む語は、ひらがなの部分
+   * （「の」「を」などの助詞や「売る」「貸す」の送りがな）で区切って内容語だけにする。
+   * 重みは語の役割で決める（日本語は「AのB」の B が中心）:
+   *   後ろが助詞（を・が・は・に・で 等）か語の終わり … 1（中心の語）
+   *   後ろが「の」（「Aの」「Aへの」）         … 0.7（修飾する語）
+   *   後ろがその他のひらがな（送りがな）       … 0.3（「支払い」「貸す」の語幹）
+   *   ただし「Aの」の後に中心の語がない場合（「家賃の支払い」）は A が中心なので 1
+   *   「自動車の修理」→ 自動車 0.7・修理 1、「パンを作って売る」→ パン 1・作 0.3・売 0.3
+   * ひらがなだけの語（よみでの検索）はそのまま重み 1。
+   */
+  var PARTICLE = /^(を|が|は|に|で|と|や|へ|も|から|まで|より)$/;
+  var MODIFIER = 0.7;
+  function relaxTokens(query) {
+    var out = [];
+    function add(term, weight) {
+      if (!term) return;
+      for (var i = 0; i < out.length; i++) {
+        if (out[i].term === term) {
+          out[i].weight = Math.max(out[i].weight, weight);
+          return;
+        }
+      }
+      out.push({ term: term, weight: weight });
+    }
+    String(query || "")
+      .normalize("NFKC")
+      .split(/\s+/)
+      .forEach(function (part) {
+        if (!part) return;
+        if (isAllHiragana(part)) return add(normalize(part), 1);
+        var pieces = part.split(/([\u3041-\u3096]+)/); // [内容語, ひらがな, 内容語, …]
+        for (var i = 0; i < pieces.length; i += 2) {
+          var after = pieces[i + 1] || "";
+          var weight = !after || PARTICLE.test(after) ? 1 : /の$/.test(after) ? MODIFIER : 0.3;
+          add(normalize(pieces[i]), weight);
+        }
+      });
+    // 「Aの」の後に中心の語（重み 1）がなければ A を中心の語にする
+    out.forEach(function (t, i) {
+      if (t.weight !== MODIFIER) return;
+      var headLater = out.slice(i + 1).some(function (u) {
+        return u.weight === 1;
+      });
+      if (!headLater) t.weight = 1;
+    });
+    return out;
+  }
+
+  function relaxTerms(query) {
+    return relaxTokens(query).map(function (t) {
+      return t.term;
+    });
+  }
+
+  function sortResults(results) {
+    results.sort(function (a, b) {
+      return b.score - a.score || a.index - b.index;
+    });
+    return results.map(function (r) {
+      return r.item;
+    });
+  }
+
+  // すべての語に一致した項目（AND）
+  function matchAll(items, terms, score, accept) {
+    var results = [];
+    items.forEach(function (item, index) {
+      if (!accept(item)) return;
+      var total = 0;
+      for (var i = 0; i < terms.length; i++) {
+        var s = score(item, terms[i]);
+        if (!s) return;
+        total += s;
+      }
+      results.push({ item: item, score: total, index: index });
+    });
+    return sortResults(results);
+  }
+
+  /*
+   * どれかの語に一致した項目（OR）。語ごとに「一致の強さ（名前・関連語での一致ほど高い）＋一致の加点」に
+   * 語の重みを掛けて合計し、その順に並べる。1文字の語だけの一致は除く
+   */
+  var MATCH_BONUS = 20;
+  function matchAny(items, tokens, score, accept) {
+    var results = [];
+    items.forEach(function (item, index) {
+      if (!accept(item)) return;
+      var total = 0;
+      var long = false;
+      tokens.forEach(function (t) {
+        var s = score(item, t.term);
+        if (!s) return;
+        total += (s + MATCH_BONUS) * t.weight;
+        if (t.term.length >= 2) long = true;
+      });
+      if (total && (long || tokens.length === 1)) results.push({ item: item, score: total, index: index });
+    });
+    return sortResults(results);
+  }
+
+  /*
+   * 共通の検索手順。
+   *   1. 入力どおりの語で AND 検索
+   *   2. 見つからなければ、助詞・送りがなで区切った内容語のどれかに一致するものを、
+   *      一致の強さと一致した語の数の順に（多くの語に強く一致したものほど上）
+   * 2 で見つけた結果には approx = true を付ける（画面で「言い方を変えて探した結果」と表示する）。
+   */
+  function runSearch(items, query, score, accept) {
+    var terms = splitTerms(query);
+    var results = matchAll(items, terms, score, accept);
+    if (results.length || !terms.length) return results;
+    results = matchAny(items, relaxTokens(query), score, accept);
+    results.approx = results.length > 0;
+    return results;
+  }
+
   // 1語に対する項目のスコア（0 = 一致なし）
   function scoreTerm(item, term) {
     var name = normalize(item.name);
@@ -57,24 +180,10 @@
    */
   function search(items, query, options) {
     options = options || {};
-    var terms = splitTerms(query);
-    var results = [];
-    items.forEach(function (item, index) {
-      if (options.cat && item.cat !== options.cat) return;
-      if (options.account && item.accounts.indexOf(options.account) < 0) return;
-      var total = 0;
-      for (var i = 0; i < terms.length; i++) {
-        var s = scoreTerm(item, terms[i]);
-        if (!s) return;
-        total += s;
-      }
-      results.push({ item: item, score: total, index: index });
-    });
-    results.sort(function (a, b) {
-      return b.score - a.score || a.index - b.index;
-    });
-    return results.map(function (r) {
-      return r.item;
+    return runSearch(items, query, scoreTerm, function (item) {
+      if (options.cat && item.cat !== options.cat) return false;
+      if (options.account && item.accounts.indexOf(options.account) < 0) return false;
+      return true;
     });
   }
 
@@ -103,24 +212,10 @@
    */
   function searchArticles(articles, query, options) {
     options = options || {};
-    var terms = splitTerms(query);
-    var results = [];
-    articles.forEach(function (article, index) {
-      if (options.type && article.type !== options.type) return;
-      if (options.category && article.category !== options.category) return;
-      var total = 0;
-      for (var i = 0; i < terms.length; i++) {
-        var s = scoreArticle(article, terms[i]);
-        if (!s) return;
-        total += s;
-      }
-      results.push({ item: article, score: total, index: index });
-    });
-    results.sort(function (a, b) {
-      return b.score - a.score || a.index - b.index;
-    });
-    return results.map(function (r) {
-      return r.item;
+    return runSearch(articles, query, scoreArticle, function (article) {
+      if (options.type && article.type !== options.type) return false;
+      if (options.category && article.category !== options.category) return false;
+      return true;
     });
   }
 
@@ -170,27 +265,12 @@
   function searchKani(entries, query, options) {
     options = options || {};
     var type = options.type ? Number(options.type) : 0;
-    var terms = splitTerms(query);
-    var results = [];
-    entries.forEach(function (entry, index) {
-      if (type && entry.t.indexOf(type) < 0) return;
-      var total = 0;
-      for (var i = 0; i < terms.length; i++) {
-        var s = scoreKani(entry, terms[i]);
-        if (!s) return;
-        total += s;
-      }
-      results.push({ item: entry, score: total, index: index });
-    });
-    results.sort(function (a, b) {
-      return b.score - a.score || a.index - b.index;
-    });
-    return results.map(function (r) {
-      return r.item;
+    return runSearch(entries, query, scoreKani, function (entry) {
+      return !type || entry.t.indexOf(type) >= 0;
     });
   }
 
-  var api = { normalize: normalize, search: search, searchArticles: searchArticles, searchKani: searchKani };
+  var api = { normalize: normalize, relaxTerms: relaxTerms, search: search, searchArticles: searchArticles, searchKani: searchKani };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;
