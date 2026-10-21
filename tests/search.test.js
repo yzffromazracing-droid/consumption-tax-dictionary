@@ -73,3 +73,45 @@ test("不課税・免税項目の具体例でも検索できる", () => {
   assert.equal(search(ITEMS, "お賽銭")[0].cat, "fu");
   assert.equal(search(ITEMS, "腕時計の修理")[0].cat, "men");
 });
+
+test("助詞・送りがなで区切って内容語にする", () => {
+  const { relaxTerms } = require("../js/search.js");
+  assert.deepEqual(relaxTerms("自動車の修理"), ["自動車", "修理"]);
+  assert.deepEqual(relaxTerms("駐車場を貸す"), ["駐車場", "貸"]);
+  assert.deepEqual(relaxTerms("パンを作って売る"), [normalize("パン"), "作", "売"]);
+  assert.deepEqual(relaxTerms("ちゅうしゃじょう"), ["ちゅうしゃじょう"]);
+});
+
+test("言い方を変えても見つかる（辞書）", () => {
+  const cases = [
+    ["自動車の修理", "車検・修理・整備費用"],
+    ["不動産の仲介", "不動産仲介手数料"],
+    ["家賃の支払い", "事務所・店舗の家賃"],
+    ["社員の給料", "給与・賞与・役員報酬"],
+    ["海外への輸出", "輸出売上（商品の輸出）"],
+    ["印紙を買う", "収入印紙・証紙の購入"],
+  ];
+  for (const [q, name] of cases) {
+    const r = search(ITEMS, q);
+    assert.ok(r.approx, `${q}: 近い結果の印がない`);
+    assert.equal(r[0] && r[0].name, name, `${q}: ${r.slice(0, 3).map((i) => i.name).join("、")}`);
+  }
+});
+
+test("そのままの言葉で見つかるときは近い結果の印を付けない", () => {
+  const r = search(ITEMS, "収入印紙");
+  assert.ok(r.length > 0);
+  assert.ok(!r.approx);
+});
+
+test("言い方を変えても見つかる（簡易課税・国税庁の記事）", () => {
+  const { ENTRIES } = require("../js/kani.js");
+  const { ARTICLES } = require("../js/nta.js");
+  const { searchKani, searchArticles } = require("../js/search.js");
+  const [k] = searchKani(ENTRIES, "不動産の仲介");
+  assert.ok(k && k.t.includes(6), "不動産の仲介が第6種にならない");
+  const [d] = searchKani(ENTRIES, "駐車場を貸す");
+  assert.ok(d && d.t.includes(6), "駐車場を貸すが第6種にならない");
+  const [a] = searchArticles(ARTICLES, "簡易課税の届出");
+  assert.ok(a && /簡易課税制度選択届出書/.test(a.title), "簡易課税の届出で届出書の記事が出ない");
+});

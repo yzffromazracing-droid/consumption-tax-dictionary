@@ -20,6 +20,11 @@
 
   var state = { q: "", cat: "", account: "" };
 
+  // 件数の表示。言い方を変えて探した結果（検索語どおりには見つからなかった）ときはその旨を添える
+  function countText(results) {
+    return results.length + " 件" + (results.approx ? "（そのままの言葉では見つからなかったため、言葉を区切って近いものを表示しています）" : "");
+  }
+
   function $(id) {
     return document.getElementById(id);
   }
@@ -226,7 +231,7 @@
     }
     // 1件だけヒットしたら開いておく
     if (results.length === 1) list.querySelector("details").open = true;
-    $("count").textContent = results.length + " 件";
+    $("count").textContent = countText(results);
   }
 
   /* ---------- 判定フロー ---------- */
@@ -511,7 +516,7 @@
         list.appendChild(el("li", { class: "empty" }, [more]));
       }
       if (results.length === 1) list.querySelector("details").open = true;
-      $(prefix + "-count").textContent = results.length + " 件";
+      $(prefix + "-count").textContent = countText(results);
     }
 
     $(prefix + "-fetched").textContent = data.FETCHED_AT;
@@ -662,7 +667,7 @@
           ])
         );
       }
-      $("kani-count").textContent = st.q ? results.length + " 件" : "収録 " + KANI.ENTRIES.length + " 件";
+      $("kani-count").textContent = st.q ? countText(results) : "収録 " + KANI.ENTRIES.length + " 件";
     }
 
     $("kani-fetched").textContent = KANI.FETCHED_AT;
