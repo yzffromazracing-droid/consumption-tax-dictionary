@@ -17,6 +17,7 @@
 
 var fs = require("fs");
 var path = require("path");
+var yomi = require("./kani-yomi.js").yomi;
 
 var BASE = "https://www.nta.go.jp";
 var TA = "/taxes/shiraberu/taxanswer/shohi/";
@@ -362,6 +363,15 @@ function buildIndustry(page, html, src) {
         }
       });
       if (kw.length) industry.kw = kw;
+      // ひらがなでも探せるよう、業種名・中分類・別名のよみを付ける（読めない漢字があればここで止まる）
+      var readings = [];
+      minors.concat([middle], kw).forEach(function (name) {
+        var plain = name.replace(/\s*〔\d+〕/g, "").trim();
+        var r = yomi(plain);
+        if (r !== plain && readings.indexOf(r) < 0) readings.push(r);
+      });
+      if (readings.length) industry.yomi = readings;
+      industry.majYomi = yomi(major.replace(/^[A-Z]－?/, ""));
       entries.push(industry);
       count++;
       if (!fresh[3]) return; // 留意事項が前の行から持ち越しのときは重複させない
@@ -420,6 +430,8 @@ var src =
   " *                t = 該当する区分の配列、approx = 「おおむね」、maj/mid/min = 大・中・小分類、src = SOURCES の添字\n" +
   " *                of = 留意事項の〔例〕の場合、例を挙げている文\n" +
   " *                food = 農林水産業で、飲食料品の譲渡に係る部分は第2種・それ以外は第3種\n" +
+  " *                yomi = 業種名・中分類・別名のよみ（scripts/kani-yomi.js の読み方辞書で作る。ひらがな検索用）\n" +
+  " *                majYomi = 大分類名のよみ\n" +
   " *                kw = 検索用の別名（本辞書で追加したもの。国税庁の資料の内容ではない）\n" +
   " */\n" +
   "(function (root) {\n" +
