@@ -257,6 +257,7 @@
     if (best) return best;
     if (entry.title && normalize(entry.title).indexOf(term) >= 0) return 60;
     if (entry.text && normalize(entry.text).indexOf(term) >= 0) return 40;
+    if (entry.ty && normalize(entry.ty).indexOf(term) >= 0) return 30; // 文章のよみ（ひらがなで探したとき）
     if (entry.of && normalize(entry.of).indexOf(term) >= 0) return 15;
     return 0;
   }
