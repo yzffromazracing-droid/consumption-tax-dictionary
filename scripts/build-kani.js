@@ -415,6 +415,12 @@ PAGES.forEach(function (page) {
   BUILDERS[page.kind](page, html, addSource(page.path, html));
 });
 
+// 留意事項・具体例・事例の文章のよみ（ひらがな検索用）
+entries.forEach(function (e) {
+  if (e.k === "i") return;
+  e.ty = yomi([e.title, e.text, e.of].filter(Boolean).join(" "));
+});
+
 var unused = Object.keys(KEYWORDS).filter(function (key) {
   return !usedKeywords[key];
 });
@@ -432,6 +438,7 @@ var src =
   " *                food = 農林水産業で、飲食料品の譲渡に係る部分は第2種・それ以外は第3種\n" +
   " *                yomi = 業種名・中分類・別名のよみ（scripts/kani-yomi.js の読み方辞書で作る。ひらがな検索用）\n" +
   " *                majYomi = 大分類名のよみ\n" +
+  " *                ty = 留意事項・具体例・事例の文章（見出し・本文・例示元の文）のよみ\n" +
   " *                kw = 検索用の別名（本辞書で追加したもの。国税庁の資料の内容ではない）\n" +
   " */\n" +
   "(function (root) {\n" +

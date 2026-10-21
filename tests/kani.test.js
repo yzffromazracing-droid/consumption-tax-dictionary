@@ -104,3 +104,26 @@ test("ひらがなでも漢字の業種が見つかる", () => {
     assert.ok(top.k === "i" && top.t.includes(type), `${q}: ${top.k} 第${top.t.join("・")}種（期待は第${type}種の業種）`);
   }
 });
+
+test("留意事項・具体例・事例の文章のよみに漢字が残っていない", () => {
+  const kanji = /[㐀-鿿々]/;
+  for (const e of ENTRIES.filter((x) => x.k !== "i")) {
+    assert.ok(e.ty, `よみがない: ${e.text.slice(0, 30)}`);
+    assert.ok(!kanji.test(e.ty), `よみに漢字が残っている: ${e.ty.slice(0, 60)}`);
+  }
+});
+
+test("ひらがなでも留意事項・具体例の文章が見つかる", () => {
+  const cases = [
+    ["せいまい", "精米", 4],
+    ["うなぎ", "鰻", 3],
+    ["ちんもち", "賃もち", 4],
+    ["がくそう", "額装", 3],
+  ];
+  for (const [q, word, type] of cases) {
+    const r = searchKani(ENTRIES, q);
+    const hit = r.find((e) => e.k !== "i" && e.text.includes(word));
+    assert.ok(hit, `${q}: 「${word}」を含む文章が見つからない`);
+    assert.ok(hit.t.includes(type), `${q}: 第${hit.t.join("・")}種（期待は第${type}種）`);
+  }
+});
