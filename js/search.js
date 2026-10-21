@@ -229,7 +229,8 @@
   // 1語に対する事業区分の項目のスコア（0 = 一致なし）
   function scoreKani(entry, term) {
     // 業種名で探せるのは業種の項目だけ（留意事項は同じ行の別業種の話のこともあるため本文で探す）
-    var names = entry.k === "i" ? entry.min.concat([entry.mid]) : [];
+    // よみ（ひらがな）でも業種名として探せる
+    var names = entry.k === "i" ? entry.min.concat([entry.mid], entry.yomi || []) : [];
     var best = 0;
     var i;
     for (i = 0; i < names.length; i++) {
@@ -239,9 +240,12 @@
     }
     if (entry.k === "i") {
       // 大分類名（「D－建設業」など）そのものの検索は上位に出す
-      var major = normalize(entry.maj.replace(/^[A-Z]－?/, ""));
-      if (major === term || major === term + "業") best = Math.max(best, 95);
-      else if (major.indexOf(term) >= 0) best = Math.max(best, 20);
+      [entry.maj.replace(/^[A-Z]－?/, ""), entry.majYomi || ""].forEach(function (m) {
+        var major = normalize(m);
+        if (!major) return;
+        if (major === term || major === term + "業" || major === term + "ぎょう") best = Math.max(best, 95);
+        else if (major.indexOf(term) >= 0) best = Math.max(best, 20);
+      });
     }
     if (best) return best;
     var kw = entry.kw || [];

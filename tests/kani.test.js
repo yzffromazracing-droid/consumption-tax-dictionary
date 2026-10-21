@@ -71,3 +71,36 @@ test("農林水産業の飲食料品の譲渡は第2種として出てくる", (
   const r = searchKani(ENTRIES, "耕種農業", { type: "2" });
   assert.ok(r.length > 0, "第2種で絞り込むと耕種農業が出ない");
 });
+
+test("業種のよみに漢字が残っていない", () => {
+  const kanji = /[㐀-鿿々]/;
+  for (const e of ENTRIES.filter((x) => x.k === "i")) {
+    assert.ok(e.yomi && e.yomi.length, `${e.min.join("・")}: よみがない`);
+    for (const y of e.yomi.concat([e.majYomi])) assert.ok(!kanji.test(y), `よみに漢字が残っている: ${y}`);
+  }
+});
+
+test("読み方辞書で業種名を読める", () => {
+  const { yomi } = require("../scripts/kani-yomi.js");
+  assert.equal(yomi("一般乗用旅客自動車運送業"), "いっぱんじょうようりょかくじどうしゃうんそうぎょう");
+  assert.equal(yomi("身の回り品卸売業"), "みのまわりひんおろしうりぎょう");
+  assert.throws(() => yomi("鬱"), /よみが分からない漢字/);
+});
+
+test("ひらがなでも漢字の業種が見つかる", () => {
+  const cases = [
+    ["ちゅうしゃじょう", 6],
+    ["ふどうさん", 6],
+    ["いんさつ", 3],
+    ["がくしゅうじゅく", 5],
+    ["じどうしゃせいび", 5],
+    ["いざかや", 4],
+    ["けんせつぎょう", 3],
+    ["うえき", 4],
+  ];
+  for (const [q, type] of cases) {
+    const [top] = searchKani(ENTRIES, q);
+    assert.ok(top, `${q}: ヒットなし`);
+    assert.ok(top.k === "i" && top.t.includes(type), `${q}: ${top.k} 第${top.t.join("・")}種（期待は第${type}種の業種）`);
+  }
+});
