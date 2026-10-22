@@ -395,6 +395,102 @@
 
   var PAGE_SIZE = 50;
 
+  /* ---------- 国税庁の記事の全文 ---------- */
+
+  // js/nta-body.js（約1.3MB）は最初に記事を開いたとき・検索したときに読み込む
+  var ntaBodyState = typeof NTA_BODIES !== "undefined" ? "loaded" : "idle";
+  var ntaBodyWaiting = [];
+
+  function loadNtaBodies(callback) {
+    if (ntaBodyState === "loaded") return callback(true);
+    if (ntaBodyState === "failed") return callback(false);
+    ntaBodyWaiting.push(callback);
+    if (ntaBodyState === "loading") return;
+    ntaBodyState = "loading";
+    var script = document.createElement("script");
+    script.src = "js/nta-body.js";
+    function done(ok) {
+      ntaBodyState = ok ? "loaded" : "failed";
+      if (ok) attachNtaFullText();
+      var waiting = ntaBodyWaiting;
+      ntaBodyWaiting = [];
+      waiting.forEach(function (cb) {
+        cb(ok);
+      });
+    }
+    script.onload = function () {
+      done(typeof NTA_BODIES !== "undefined");
+    };
+    script.onerror = function () {
+      done(false);
+    };
+    document.head.appendChild(script);
+  }
+
+  function NTA_BODY(url) {
+    return typeof NTA_BODIES !== "undefined" ? NTA_BODIES[url] : null;
+  }
+
+  // 本文を検索できるよう、各記事に本文の文字列（検索用に正規化したもの）を持たせる
+  function attachNtaFullText() {
+    NTA.ARTICLES.forEach(function (a) {
+      var blocks = NTA_BODY(a.url);
+      if (!blocks) return;
+      a.fullNorm = TaxSearch.normalize(
+        blocks
+          .map(function (b) {
+            if (b[0] === "t") {
+              return b[1]
+                .map(function (row) {
+                  return row
+                    .map(function (c) {
+                      return c.x;
+                    })
+                    .join(" ");
+                })
+                .join(" ");
+            }
+            return b[b.length - 1];
+          })
+          .join(" ")
+      );
+    });
+  }
+
+  // 全文のブロック（scripts/build-nta.js の bodyBlocks）を表示用の要素にする。テキストは textContent で入れる
+  function renderArticleBlocks(blocks) {
+    var box = el("div", { class: "article-body" });
+    var list = null;
+    blocks.forEach(function (b) {
+      if (b[0] !== "li") list = null;
+      if (b[0] === "h") {
+        box.appendChild(el(b[1] <= 2 ? "h4" : "h5", { class: "article-h", text: b[2] }));
+      } else if (b[0] === "p") {
+        box.appendChild(el("p", { class: "article-p", text: b[1] }));
+      } else if (b[0] === "li") {
+        if (!list) {
+          list = el("ul", { class: "article-ul" });
+          box.appendChild(list);
+        }
+        list.appendChild(el("li", { class: "article-p", text: b[1] }));
+      } else if (b[0] === "t") {
+        var table = el("table", { class: "article-table" });
+        b[1].forEach(function (row) {
+          var tr = el("tr");
+          row.forEach(function (c) {
+            var attrs = { text: c.x };
+            if (c.r > 1) attrs.rowspan = String(c.r);
+            if (c.c > 1) attrs.colspan = String(c.c);
+            tr.appendChild(el(c.h ? "th" : "td", attrs));
+          });
+          table.appendChild(tr);
+        });
+        box.appendChild(el("div", { class: "article-table-wrap" }, [table]));
+      }
+    });
+    return box;
+  }
+
   /*
    * 国税庁の記事・通達の一覧タブを作る。
    * prefix : 要素IDの接頭辞（例：nta → #nta-q, #nta-results …）
@@ -403,6 +499,8 @@
    * opts.extra(a)   : 詳細に追加する要素の配列（任意）
    * opts.before(a)  : 詳細の本文の前に置く要素の配列（任意）
    * opts.hideTypes  : 種別が1つだけのとき種別ボタンを出さない
+   * opts.fullText   : 全文の読み込み関数 load(callback)。指定すると、記事を開いたときに要旨の代わりに
+   *                   全文を表示し、検索語を入れたときは本文も検索対象にする（任意）
    */
   function setupDocTab(prefix, data, opts) {
     var st = { q: "", type: "", category: "", limit: PAGE_SIZE };
@@ -443,7 +541,17 @@
     $(prefix + "-q").addEventListener("input", function (e) {
       st.q = e.target.value;
       renderList(true);
+      // 本文も検索できるよう、最初の検索で全文を読み込む（読み込めたら結果を出し直す）
+      if (opts.fullText && st.q.trim() && !fullLoaded) {
+        opts.fullText(function (ok) {
+          if (ok && !fullLoaded) {
+            fullLoaded = true;
+            renderList(false);
+          }
+        });
+      }
     });
+    var fullLoaded = false;
 
     // 種別に応じて分類の選択肢を作り直す（国税庁の目次順）
     function fillCategories() {
@@ -476,15 +584,36 @@
           el("span", { class: "item-name", text: a.title }),
         ]),
       ]);
+      var summaryText = el("p", { class: "article-summary", text: a.summary });
+      var full = opts.fullText ? el("div", { class: "article-full" }) : null;
       var body = el(
         "div",
         { class: "item-body" },
         (opts.before ? opts.before(a) : []).concat([
-          el("p", { class: "article-summary", text: a.summary }),
+          summaryText,
+          full,
           el("p", {}, [externalLink(a.url, "国税庁の原文を開く ↗", "article-link")]),
         ]).concat(opts.extra ? opts.extra(a) : [])
       );
-      return el("li", { class: "item article" + (a.status ? " is-abolished" : "") }, [el("details", {}, [summary, body])]);
+      var details = el("details", {}, [summary, body]);
+      if (full) {
+        // 開いたときに全文を読み込んで、要旨と差し替える
+        details.addEventListener("toggle", function () {
+          if (!details.open || full.childNodes.length) return;
+          full.appendChild(el("p", { class: "article-loading", text: "全文を読み込んでいます…" }));
+          opts.fullText(function (ok) {
+            full.textContent = "";
+            var blocks = ok && NTA_BODY(a.url);
+            if (!blocks) {
+              full.appendChild(el("p", { class: "article-loading", text: "全文を読み込めませんでした。原文をご覧ください。" }));
+              return;
+            }
+            summaryText.hidden = true;
+            full.appendChild(renderArticleBlocks(blocks));
+          });
+        });
+      }
+      return el("li", { class: "item article" + (a.status ? " is-abolished" : "") }, [details]);
     }
 
     function renderList(resetLimit) {
@@ -780,6 +909,7 @@
     }
   );
   setupDocTab("nta", NTA, {
+    fullText: loadNtaBodies,
     noLabel: function (a) {
       return (a.type === "taxanswer" ? "No." : "事例 ") + a.no + "　" + a.category;
     },

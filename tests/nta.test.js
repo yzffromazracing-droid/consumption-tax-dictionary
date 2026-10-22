@@ -77,3 +77,40 @@ test("記事は番号・タイトル・要旨で検索できる", () => {
   assert.ok(searchArticles(ARTICLES, "", { category: cat }).every((a) => a.category === cat));
   assert.deepEqual(searchArticles(ARTICLES, ""), ARTICLES);
 });
+
+test("全記事の全文があり、形式が正しい", () => {
+  const BODIES = require("../js/nta-body.js");
+  const markers = /[-]/;
+  for (const a of ARTICLES) {
+    const blocks = BODIES[a.url];
+    assert.ok(Array.isArray(blocks) && blocks.length, `${a.no}: 全文がない`);
+    for (const b of blocks) {
+      assert.ok(["h", "p", "li", "t"].includes(b[0]), `${a.no}: 不明なブロック ${b[0]}`);
+      if (b[0] === "h") assert.ok([2, 3, 4, 5].includes(b[1]) && b[2], `${a.no}: 見出しが不正`);
+      if (b[0] === "t") {
+        for (const row of b[1]) for (const c of row) assert.equal(typeof c.x, "string", `${a.no}: 表のセルが不正`);
+      } else {
+        assert.ok(typeof b[b.length - 1] === "string" && b[b.length - 1], `${a.no}: 空のブロック`);
+      }
+      assert.ok(!markers.test(JSON.stringify(b)), `${a.no}: 区切り記号が残っている`);
+    }
+    if (a.type === "qa") {
+      const heads = blocks.filter((b) => b[0] === "h").map((b) => b[2]);
+      assert.ok(heads.includes("【回答要旨】"), `${a.no}: 【回答要旨】がない`);
+    }
+  }
+  assert.equal(Object.keys(BODIES).length, ARTICLES.length, "一覧にない記事の全文がある");
+});
+
+test("全文を読み込むと本文の語でも記事が見つかる", () => {
+  const BODIES = require("../js/nta-body.js");
+  const { normalize } = require("../js/search.js");
+  const withFull = ARTICLES.map((a) => ({
+    ...a,
+    fullNorm: normalize(BODIES[a.url].map((b) => (b[0] === "t" ? b[1].flat().map((c) => c.x).join(" ") : b[b.length - 1])).join(" ")),
+  }));
+  // 「暗号資産」はタックスアンサー No.6201 等の本文にだけ出てくる（タイトル・要旨にはない）
+  assert.equal(searchArticles(ARTICLES, "暗号資産").length, 0);
+  const r = searchArticles(withFull, "暗号資産");
+  assert.ok(r.some((a) => a.no === "6201"), "本文の語で記事が見つからない");
+});
