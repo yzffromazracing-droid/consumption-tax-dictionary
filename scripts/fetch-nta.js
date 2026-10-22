@@ -72,7 +72,9 @@ function decode(buf) {
   return new TextDecoder(enc).decode(buf);
 }
 
+// コメントアウトされたリンク（非公開の記事。取得すると 404 になる）は除く
 function links(html, re) {
+  html = html.replace(/<!--[\s\S]*?-->/g, "");
   var seen = {};
   var out = [];
   var m;

@@ -170,6 +170,9 @@ if (!taIndexHtml || !qaIndexHtml) {
   console.error("索引ページのHTMLがありません。先に fetch-nta.js を実行してください。");
   process.exit(1);
 }
+// 索引でコメントアウトされている記事（国税庁が目次から外したもの）は載せない
+taIndexHtml = taIndexHtml.replace(/<!--[\s\S]*?-->/g, "");
+qaIndexHtml = qaIndexHtml.replace(/<!--[\s\S]*?-->/g, "");
 
 var meta = {};
 try {
