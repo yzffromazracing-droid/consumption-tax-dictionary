@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /*
- * fetch-nta.js で保存した国税庁ホームページのHTMLから js/nta.js を生成する。
+ * fetch-nta.js で保存した国税庁ホームページのHTMLから js/nta.js（記事一覧・要旨）と
+ * js/nta-body.js（全文）を生成する。
  *
  *   node scripts/build-nta.js <保存先ディレクトリ> [出力ファイル=js/nta.js]
  *
@@ -19,6 +20,7 @@ var SUMMARY_LEN = 200;
 
 var dir = process.argv[2];
 var outFile = process.argv[3] || path.join(__dirname, "..", "js", "nta.js");
+var bodyFile = path.join(path.dirname(outFile), "nta-body.js"); // 全文（記事を開いたときに読み込む）
 if (!dir) {
   console.error("usage: node scripts/build-nta.js <htmlDir> [outFile]");
   process.exit(2);
@@ -83,6 +85,142 @@ function sectionAfter(body, headingRe, stopRe) {
   var rest = body.slice(m.index + m[0].length);
   var stop = rest.search(stopRe);
   return stop >= 0 ? rest.slice(0, stop) : rest;
+}
+
+/* ---------- 全文 ---------- */
+
+/*
+ * 記事の全文を表示用のブロックに変換する。HTMLはそのまま使わず、テキストと構造だけを取り出す。
+ *   ["h", 段, 見出し] / ["p", 段落] / ["li", 箇条書き] / ["t", 行の配列]
+ *   表の行はセルの配列で、セルは { x: テキスト, h: 見出しセルなら1, r: rowspan, c: colspan }
+ * 段落内の改行（<br>）は "\n" で残す。
+ */
+var BR = "";
+
+// 画像は文字に置き換える（丸数字・記号）か、図であることだけを示す
+function replaceImages(html) {
+  return html.replace(/<img\b[^>]*>/gi, function (tag) {
+    var src = (/\bsrc="([^"]*)"/i.exec(tag) || [])[1] || "";
+    var alt = text((/\balt="([^"]*)"/i.exec(tag) || [])[1] || "");
+    var num = /\/(?:decimal|no_img)\/0*(\d+)\.\w+$/.exec(src);
+    if (num) {
+      var n = Number(num[1]);
+      return n >= 1 && n <= 20 ? String.fromCharCode(0x2460 + n - 1) : "(" + n + ")";
+    }
+    if (/\/mark\/maru\./.test(src)) return "○";
+    if (/\/mark\/m2\./.test(src)) return "㎡";
+    if (/\/template\/|\/top_img\/|\/open\.png$/.test(src)) return "";
+    if (alt === "undefined") alt = "";
+    return "［図" + (alt ? "：" + alt : "") + "（原文を参照）］";
+  });
+}
+
+function textBr(html) {
+  return text(String(html).replace(/<br\s*\/?>|<\/p>\s*<p[^>]*>/gi, BR))
+    .split(BR)
+    .map(function (line) {
+      return line.trim();
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parseTable(html) {
+  var rows = [];
+  var rowRe = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
+  var m;
+  while ((m = rowRe.exec(html))) {
+    var cells = [];
+    var cellRe = /<(th|td)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+    var c;
+    while ((c = cellRe.exec(m[1]))) {
+      var cell = { x: textBr(c[3]) };
+      if (c[1].toLowerCase() === "th") cell.h = 1;
+      var rs = /rowspan="?(\d+)/i.exec(c[2]);
+      var cs = /colspan="?(\d+)/i.exec(c[2]);
+      if (rs && Number(rs[1]) > 1) cell.r = Number(rs[1]);
+      if (cs && Number(cs[1]) > 1) cell.c = Number(cs[1]);
+      cells.push(cell);
+    }
+    if (cells.length) rows.push(cells);
+  }
+  return rows;
+}
+
+// 載せない節（タックスアンサーの「対象税目」「関連リンク」「お問い合わせ先」以降）
+var SKIP_H2 = /^(対象税目|関連リンク)$/;
+var STOP_H2 = /^お問い合わせ先$/;
+
+// 区切り記号（本文には現れない私用文字）
+var LINE = ""; // 行の区切り
+var ITEM = ""; // 箇条書きの行の先頭
+var HEAD = ""; // 見出しの行の先頭（直後に段の数字）
+var TABLE = ""; // 表の位置（前後で挟んだ番号）
+
+/*
+ * 入れ子の箇条書きや <div> の段落でも本文を落とさないよう、ブロック要素の境目をすべて
+ * 行の区切りにしてから、行ごとに見出し・箇条書き・表・段落に分ける。
+ */
+function bodyBlocks(html) {
+  var body = mainBody(html)
+    .replace(/^<h1[\s\S]*?<\/h1>/i, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "");
+  body = replaceImages(body);
+  var tables = [];
+  body = body
+    .replace(/<table\b[\s\S]*?<\/table>/gi, function (t) {
+      var cap = /<caption[^>]*>([\s\S]*?)<\/caption>/i.exec(t);
+      tables.push({ caption: cap ? textBr(cap[1]) : "", rows: parseTable(t) });
+      return LINE + TABLE + (tables.length - 1) + TABLE + LINE;
+    })
+    .replace(/<h([2-5])\b[^>]*>/gi, LINE + HEAD + "$1")
+    .replace(/<li\b[^>]*>/gi, LINE + ITEM)
+    .replace(/<\/?(p|div|ul|ol|dl|dt|dd|li|h[2-5]|blockquote|section)\b[^>]*>/gi, LINE)
+    .replace(/<br\s*\/?>/gi, BR);
+  var blocks = [];
+  var skipping = false;
+  var stopped = false;
+  text(body)
+    .split(LINE)
+    .forEach(function (raw) {
+      if (stopped) return;
+      var line = raw
+        .split(BR)
+        .map(function (l) {
+          return l.trim();
+        })
+        .filter(Boolean)
+        .join("\n");
+      if (!line) return;
+      var tm = new RegExp("^" + TABLE + "(\\d+)" + TABLE + "$").exec(line);
+      if (tm) {
+        if (skipping) return;
+        var t = tables[Number(tm[1])];
+        if (t.caption) blocks.push(["p", t.caption]);
+        if (t.rows.length) blocks.push(["t", t.rows]);
+        return;
+      }
+      if (line[0] === HEAD) {
+        var level = Number(line[1]);
+        var str = line.slice(2).trim();
+        if (level === 2 && STOP_H2.test(str)) {
+          stopped = true;
+          return;
+        }
+        if (level === 2) skipping = SKIP_H2.test(str);
+        if (!skipping && str) blocks.push(["h", level, str]);
+        return;
+      }
+      if (skipping) return;
+      if (line[0] === ITEM) {
+        var item = line.slice(1).trim();
+        if (item) blocks.push(["li", item]);
+        return;
+      }
+      blocks.push(["p", line]);
+    });
+  return blocks;
 }
 
 /* ---------- タックスアンサー ---------- */
@@ -183,6 +321,7 @@ try {
 
 var missing = [];
 var articles = [];
+var bodies = {};
 
 parseTaxAnswerIndex(taIndexHtml).forEach(function (a) {
   var html = read(a.path);
@@ -199,6 +338,7 @@ parseTaxAnswerIndex(taIndexHtml).forEach(function (a) {
     summary: taxAnswerSummary(html),
     asOf: taxAnswerAsOf(html),
   });
+  bodies[BASE + a.path] = bodyBlocks(html);
 });
 
 parseQaIndex(qaIndexHtml).forEach(function (a) {
@@ -216,6 +356,7 @@ parseQaIndex(qaIndexHtml).forEach(function (a) {
     summary: qaSummary(html),
     asOf: qaAsOf(html),
   });
+  bodies[BASE + a.path] = bodyBlocks(html);
 });
 
 var fetchedAt = (meta.fetchedAt || new Date().toISOString()).slice(0, 10);
@@ -263,6 +404,35 @@ var src =
   '})(typeof self !== "undefined" ? self : this);\n';
 
 fs.writeFileSync(outFile, src);
+
+var bodySrc =
+  "/*\n" +
+  " * 国税庁ホームページの消費税関係の記事の全文（自動生成。手で編集しない）\n" +
+  " *\n" +
+  " *   出典：国税庁ホームページ（https://www.nta.go.jp/）　取得日：" + fetchedAt + "\n" +
+  " *   生成：node scripts/build-nta.js <dir>\n" +
+  " *\n" +
+  " * 記事のURL → 本文のブロックの配列（形式は scripts/build-nta.js の bodyBlocks を参照）。\n" +
+  " * 画像の丸数字・記号は文字に置き換え、図は「［図：…（原文を参照）］」とした。\n" +
+  " * 容量が大きいため、画面では記事を開いたとき・記事を検索したときに読み込む。\n" +
+  " */\n" +
+  "(function (root) {\n" +
+  '  "use strict";\n\n' +
+  "  var BODIES = {\n" +
+  Object.keys(bodies)
+    .map(function (url) {
+      return "    " + JSON.stringify(url) + ": " + JSON.stringify(bodies[url]);
+    })
+    .join(",\n") +
+  "\n  };\n\n" +
+  '  if (typeof module !== "undefined" && module.exports) {\n' +
+  "    module.exports = BODIES;\n" +
+  "  } else {\n" +
+  "    root.NTA_BODIES = BODIES;\n" +
+  "  }\n" +
+  '})(typeof self !== "undefined" ? self : this);\n';
+fs.writeFileSync(bodyFile, bodySrc);
+console.log("生成: " + bodyFile);
 
 var counts = {};
 articles.forEach(function (a) {

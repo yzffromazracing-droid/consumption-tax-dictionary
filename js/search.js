@@ -202,6 +202,7 @@
     if (normalize(article.category).indexOf(term) >= 0) return 30;
     if (article.question && normalize(article.question).indexOf(term) >= 0) return 20;
     if (normalize(article.summary).indexOf(term) >= 0) return 15;
+    if (article.fullNorm && article.fullNorm.indexOf(term) >= 0) return 8; // 全文（読み込み済みのとき）
     return 0;
   }
 
