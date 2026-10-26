@@ -12,6 +12,7 @@
     <h1>消費税区分辞書</h1>
     <nav class="tabs" role="tablist">
       <button class="tab is-active" role="tab" data-tab="dict" aria-selected="true">辞書</button>
+      <button class="tab" role="tab" data-tab="ratecut" aria-selected="false">税率引下げ</button>
       <button class="tab" role="tab" data-tab="flow" aria-selected="false">判定フロー</button>
       <button class="tab" role="tab" data-tab="guide" aria-selected="false">区分の解説</button>
       <button class="tab" role="tab" data-tab="kani" aria-selected="false">簡易課税</button>
@@ -36,6 +37,178 @@
       </div>
       <p id="count" class="count"></p>
       <ul id="results" class="results"></ul>
+    </section>
+
+    <!-- 消費税率引下げ（国税庁「消費税率引下げ特設サイト」の整理） -->
+    <section id="tab-ratecut" class="panel" role="tabpanel" hidden>
+      <h2 class="section-title">飲食料品の消費税率引下げ（令和9年4月〜令和11年3月）</h2>
+      <div class="rc-alert">
+        <p><strong>法案成立前の改正案です。</strong>「飲食料品消費税率の臨時的な引下げ及び就業者負担軽減支援金の導入に関する大綱」（令和8年9月15日閣議決定）の内容で、法案が国会に提出され、可決・成立した場合のものです。今後変わることがあります。</p>
+        <p>国税庁「<a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/zeiritsuhikisage.htm" target="_blank" rel="noopener">消費税率引下げ特設サイト</a>」のリーフレット・パンフレット・Q&amp;A（令和8年9月）を整理したものです（特設サイトの最終更新：令和8年10月9日、確認日：2026年10月26日）。</p>
+      </div>
+
+      <nav class="rc-toc" aria-label="このタブの目次">
+        <a href="#rc-overview">概要</a><a href="#rc-rates">税率</a><a href="#rc-items">対象品目</a><a href="#rc-timing">適用の時期</a><a href="#rc-transition">8%のままの取引</a><a href="#rc-invoice">インボイス</a><a href="#rc-special">特例</a><a href="#rc-schedule">日程</a><a href="#rc-qa">Q&amp;A一覧</a><a href="#rc-links">資料・問合せ</a>
+      </nav>
+
+      <div class="guide-block" id="rc-overview">
+        <h2>概要</h2>
+        <ul class="plain-list">
+          <li><strong>期間：</strong>令和9年（2027年）4月1日から令和11年（2029年）3月31日までの2年間</li>
+          <li><strong>内容：</strong>飲食料品の販売（譲渡）と保税地域からの引取りの消費税率が<strong>8% → 1%</strong>（国・地方合計）に下がる</li>
+          <li><strong>変わらないもの：</strong>新聞の定期購読は8%のまま、その他（外食・酒類・日用品など）は10%のまま</li>
+          <li><strong>あわせて設けられる特例：</strong>経過的な取扱い（一定の定期供給・通信販売は8%）、免税事業者・簡易課税事業者の届出の特例、簡易課税の計算の特例、中間申告の特例、総額表示の特例</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-rates">
+        <h2>適用税率（令和9年4月1日〜令和11年3月31日）</h2>
+        <div class="rc-table-wrap">
+          <table class="rc-table">
+            <tr><th></th><th>飲食料品</th><th>新聞の定期購読</th><th>その他</th></tr>
+            <tr><th>消費税率</th><td>0.78%</td><td>6.24%</td><td>7.8%</td></tr>
+            <tr><th>地方消費税率<br>（消費税額の22/78）</th><td>0.22%</td><td>1.76%</td><td>2.2%</td></tr>
+            <tr><th>合計</th><td><strong>1%</strong></td><td>8%</td><td>10%</td></tr>
+            <tr><th>参考：令和9年3月31日まで</th><td>8%</td><td>8%</td><td>10%</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="guide-block" id="rc-items">
+        <h2>対象品目（1%になるもの）</h2>
+        <ul class="plain-list">
+          <li>対象の範囲は、<strong>現在の軽減税率（8%）の飲食料品と同じ</strong>です。食品表示法の食品（酒類を除く）で、医薬品・医薬部外品は含みません。この辞書の「軽減8%」の項目は、期間中は1%になると読み替えてください。</li>
+          <li><strong>1%：</strong>飲食料品の販売、テイクアウト（持ち帰り）、出前・宅配、有料老人ホーム等・学校給食などで行う一定の飲食料品の提供、一定の一体資産（税抜1万円以下で、食品の価額が2/3以上のもの）</li>
+          <li><strong>10%のまま：</strong>外食（飲食設備のある場所で飲食させるもの・イートイン）、ケータリング・出張料理、酒類、医薬品・医薬部外品</li>
+          <li>イートインかテイクアウトかは、提供する時点で顧客の意思を確認して判定します（掲示による確認も可）。</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-timing">
+        <h2>適用の時期の考え方</h2>
+        <ul class="plain-list">
+          <li>令和9年4月1日<strong>以後に行う</strong>飲食料品の販売から1%です。3月31日までに結んだ契約でも、4月1日以後に販売するものは原則1%です（問1-3）。</li>
+          <li>3月31日までに行った飲食料品の<strong>仕入れ</strong>は、売るのが4月以後でも8%です（問1-3）。</li>
+          <li>午前1時締めなど継続している売上計上基準により、4月1日午前0時〜1時の販売を3月31日分として計上する場合は、8%で差し支えありません（問1-3）。</li>
+          <li>売り手と買い手で計上基準が違うときは、<strong>買い手は売り手が適用した税率</strong>（インボイスに書かれた税率）で仕入税額控除をします（問1-4）。</li>
+          <li>3月31日以前に8%で販売した飲食料品の<strong>返品・貸倒れ</strong>が4月1日以後にあった場合は、8%で計算します（問1-5）。期間終了時も同様の考え方です。</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-transition">
+        <h2>4月1日以後も8%のままの取引（経過的な取扱い）</h2>
+        <ul class="plain-list">
+          <li><strong>定期供給契約：</strong>令和9年1月1日前に結んだ定期供給契約（不特定多数に定期的に供給するもの）に基づき、4月1日前に代金を受け取っている、4月1日以後の販売（受け取った部分に限る）。例：代金先払いで季節の食材が毎月届く定期便</li>
+          <li><strong>通信販売：</strong>令和9年1月1日前に販売条件を提示し、4月1日前に申込みを受けた、4月1日以後の販売。例：お中元などのカタログ販売</li>
+          <li>契約や販売条件で「4月1日以後は1%」と定めている場合や、1月1日以後に契約を変更した場合は1%です。</li>
+          <li>この取扱いは<strong>選択制ではありません</strong>（要件に当たれば8%）（問1-6）。</li>
+          <li>現金主義の小規模事業者や国・地方公共団体等の、資産の譲渡等の時期の特例で4月1日以後に行われたとされる販売も8%です。</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-invoice">
+        <h2>インボイス・帳簿</h2>
+        <ul class="plain-list">
+          <li>飲食料品の販売のインボイスには、<strong>適用税率1%とその消費税額等</strong>を記載します。それ以外の記載事項は変わりません（問2-1）。</li>
+          <li>「軽減税率の対象品目である旨」を記載していれば、「税率1%の対象品目である旨」を新たに書く必要はありません（問2-1）。</li>
+          <li>締め日の関係で、1枚の請求書に3月までの8%と4月以後の1%が混在する場合は、請求書を分けるか、同じ請求書の中で3月分・4月分を区分して税率ごとに合計・税額を書く方法が考えられます（問2-2）。</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-special">
+        <h2>あわせて設けられる特例</h2>
+        <p class="rc-p">飲食料品を売る事業者は、仕入れ（経費）が10%・売上げが1%になると、仕入れの税額が売上げの税額を上回り、一般課税（本則課税）で申告すれば<strong>還付</strong>を受けられる場合があります。そのための届出の時期などに特例が設けられます。</p>
+        <h3 class="rc-h">1. 免税事業者から課税事業者になる届出の特例（問3-1・3-2・3-4）</h3>
+        <ul class="plain-list">
+          <li>飲食料品を売る免税事業者は、<strong>令和9年4月1日の属する課税期間中</strong>に「消費税課税事業者選択届出書」を出せば、その課税期間から課税事業者になれます（通常は前の課税期間中に提出が必要）。届出書の「参考事項」欄に<strong>「飲食料品特例」</strong>と記載します。</li>
+          <li>個人事業者・12月決算法人なら令和9年1月1日から課税事業者になり、1〜3月の飲食料品は8%で申告します。原則2年間（令和9年・10年）は課税事業者です。</li>
+          <li><strong>別の方法：</strong>インボイス発行事業者の登録の経過措置を使えば、年の途中から課税事業者になれます。たとえば令和9年3月17日までに登録希望日を「4月1日」とした登録申請書を出すと、4月1日から課税事業者（1〜3月は申告不要）。この場合、令和11年（登録日から2年を経過する日の属する課税期間）までは課税事業者です。</li>
+          <li>還付を早く受けたい場合は、課税期間を3か月・1か月ごとに短縮する「課税期間の特例」も使えます（現行制度、問3-3）。</li>
+        </ul>
+        <h3 class="rc-h">2. 簡易課税から一般課税になる届出の特例（問3-5）</h3>
+        <ul class="plain-list">
+          <li>飲食料品を売る簡易課税事業者は、<strong>令和9年4月1日の属する課税期間中</strong>に「消費税簡易課税制度選択不適用届出書」を出せば、その課税期間から一般課税で申告できます（「参考事項」欄に「飲食料品特例」と記載）。</li>
+          <li>この課税期間については、簡易課税の<strong>2年間の継続適用要件（2年縛り）は適用されません</strong>。</li>
+          <li>すでに簡易課税で仮決算の中間申告をしていても、やり直す必要はありません。</li>
+        </ul>
+        <h3 class="rc-h">3. 簡易課税制度の計算方法の特例（問3-6・3-7）</h3>
+        <ul class="plain-list">
+          <li>簡易課税で申告する場合、業種区分にかかわらず、<strong>飲食料品の販売（1%）の売上税額と同額</strong>を仕入税額とします。その他の売上税額には通常どおりみなし仕入率を掛けます。2割特例・3割特例でも同様です。</li>
+          <li>計算例：飲食料品の小売2,000万円（税20万円）、雑貨の小売300万円（税30万円・第2種80%）、イートイン100万円（税10万円・第4種60%）→ 売上税額60万円 −（20万円 ＋ 30万円×80% ＋ 10万円×60%）＝ 納付税額10万円</li>
+          <li>みなし仕入率の75%ルールの判定・計算は、飲食料品の販売（1%）を除いて行います。</li>
+        </ul>
+        <h3 class="rc-h">4. 中間申告の特例（問3-8）</h3>
+        <ul class="plain-list">
+          <li><strong>引下げの開始時：</strong>令和9年4月1日以後に開始する中間申告対象期間について、直前課税期間の飲食料品の売上げ・仕入れに1%を当てはめて計算した税額（なければゼロ）で、仮決算による中間申告ができます。</li>
+          <li><strong>引下げの終了時：</strong>令和11年4月1日以後に開始する中間申告対象期間について、直前課税期間の飲食料品に8%を当てはめた税額で中間申告ができます（仕入れが1%・売上げが10%の飲食店などを想定）。</li>
+          <li>この特例による申告は、申告書の第一表だけの提出で差し支えありません。</li>
+        </ul>
+        <h3 class="rc-h">5. 飲食料品の総額表示の特例（問3-9）</h3>
+        <ul class="plain-list">
+          <li>値札の貼り替えが間に合わないなど<strong>困難な事情</strong>があり、実際の支払額と誤認させない掲示（<strong>誤認防止措置</strong>）をしている場合は、令和9年2月1日〜5月31日の間、飲食料品を8%または1%の税込価格で表示しておけます（混在も可）。</li>
+          <li>期間の終了時（令和11年2月1日〜5月31日）も同様です。</li>
+          <li>誤認防止措置の例：棚の近くに「この棚の商品は税率8%に基づく税込価格で表示しています。レジでは税率1%で精算いたします。」と掲示する。</li>
+          <li>税抜価格のみ・「＋税」のみの表示など、税込価格を表示しない方法は引き続き認められません。</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-schedule">
+        <h2>日程の整理</h2>
+        <div class="rc-table-wrap">
+          <table class="rc-table rc-schedule">
+            <tr><th>日付</th><th>内容</th></tr>
+            <tr><td>令和8年9月15日</td><td>大綱の閣議決定・特設サイト開設</td></tr>
+            <tr><td>令和9年1月1日</td><td>これより前に結んだ定期供給契約・提示した通信販売の条件が、経過的な取扱い（8%）の対象</td></tr>
+            <tr><td>令和9年2月1日〜3月31日</td><td>困難な事情があれば、飲食料品を1%の税込価格で表示しておくことも可</td></tr>
+            <tr><td>令和9年3月17日</td><td>4月1日からインボイス発行事業者（課税事業者）になる場合の登録申請の期限</td></tr>
+            <tr><td><strong>令和9年4月1日</strong></td><td><strong>飲食料品の税率が1%に</strong></td></tr>
+            <tr><td>令和9年4月1日〜5月31日</td><td>困難な事情があれば、8%の税込価格の表示のままでも可（誤認防止措置が必要）</td></tr>
+            <tr><td>令和9年4月1日の属する課税期間中</td><td>課税事業者選択届出書・簡易課税制度選択不適用届出書の特例による提出期限</td></tr>
+            <tr><td>令和11年2月1日〜3月31日</td><td>困難な事情があれば、飲食料品を8%の税込価格で表示しておくことも可</td></tr>
+            <tr><td><strong>令和11年3月31日</strong></td><td><strong>引下げ期間の終了</strong></td></tr>
+            <tr><td>令和11年4月1日〜5月31日</td><td>困難な事情があれば、1%の税込価格の表示のままでも可（誤認防止措置が必要）</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="guide-block" id="rc-qa">
+        <h2>国税庁Q&amp;Aの一覧</h2>
+        <p class="rc-p">「<a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_qa.pdf" target="_blank" rel="noopener">飲食料品に係る２年間の消費税率引下げに関するＱ＆Ａ</a>」（令和8年9月、PDF）の問です。</p>
+        <ul class="plain-list rc-qa">
+          <li>問1-1 消費税率引下げと関連する特例等の概要</li>
+          <li>問1-2 税率1%の対象となる「飲食料品」の範囲</li>
+          <li>問1-3 いつから適用されるか（深夜の売上げの締め時刻）</li>
+          <li>問1-4 売り手と買い手で計上基準が異なる場合の適用税率</li>
+          <li>問1-5 4月1日以後の返品の適用税率</li>
+          <li>問1-6 経過的な取扱い（定期供給契約・通信販売）</li>
+          <li>問2-1 インボイスや帳簿の記載内容の変更</li>
+          <li>問2-2 8%と1%の飲食料品が混在する請求書</li>
+          <li>問3-1 免税事業者が還付を受けるための手続</li>
+          <li>問3-2 免税事業者から課税事業者になる届出の特例</li>
+          <li>問3-3 課税期間を短縮する手続</li>
+          <li>問3-4 インボイス登録の経過措置で4月1日から課税事業者になる手続</li>
+          <li>問3-5 簡易課税から一般課税になる届出の特例</li>
+          <li>問3-6 簡易課税制度の計算方法の特例</li>
+          <li>問3-7 75%ルールの判定・計算</li>
+          <li>問3-8 中間申告制度の特例</li>
+          <li>問3-9 飲食料品の総額表示義務の特例</li>
+        </ul>
+      </div>
+
+      <div class="guide-block" id="rc-links">
+        <h2>国税庁の資料・お問い合わせ</h2>
+        <ul class="plain-list">
+          <li><a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/zeiritsuhikisage.htm" target="_blank" rel="noopener">消費税率引下げ特設サイト</a>（最新の情報はこちら）</li>
+          <li><a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_leaflet.pdf" target="_blank" rel="noopener">リーフレット「飲食料品に係る２年間の消費税率引下げについて」</a>（令和8年9月、PDF）</li>
+          <li><a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_pamphlet.pdf" target="_blank" rel="noopener">パンフレット「飲食料品に係る２年間の消費税率引下げについて」</a>（令和8年9月、PDF）</li>
+          <li><a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_qa.pdf" target="_blank" rel="noopener">飲食料品に係る２年間の消費税率引下げに関するＱ＆Ａ</a>（令和8年9月、PDF）</li>
+          <li>説明動画：<a href="https://www.youtube.com/watch?v=w7zR-H8LU2k" target="_blank" rel="noopener">概要版（約2分30秒）</a>・<a href="https://www.youtube.com/watch?v=iE6Un6yErRc" target="_blank" rel="noopener">詳細版（約28分）</a>（YouTube）</li>
+          <li><a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026010-002-01.pdf" target="_blank" rel="noopener">税率引下げに対応した消費税申告書様式（ドラフト版）</a>（令和8年10月9日、システム開発事業者向け、PDF）</li>
+          <li><strong>一般的なお問い合わせ：</strong>消費税軽減税率・インボイスコールセンター 0120-205-553（9:00〜17:00、土日祝除く）</li>
+          <li><strong>レジ・システム開発事業者の税制面のお問い合わせ：</strong>専用メールアドレス keigen@nta.go.jp（<a href="https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_annai.pdf" target="_blank" rel="noopener">案内</a>。令和9年4月頃まで設置予定）</li>
+        </ul>
+      </div>
+      <p class="disclaimer">国税庁の資料を要約したもので、すべての要件を網羅していません。実際の判断は、必ず特設サイトの最新の資料をご確認ください。</p>
     </section>
 
     <!-- 判定フロー -->
@@ -72,7 +245,7 @@
           <li><strong>軽減税率の判定時点：</strong>持ち帰りか店内飲食かは販売時点の意思確認で判定する。</li>
           <li><strong>インボイス：</strong>仕入税額控除には原則として適格請求書の保存が必要。公共交通機関の3万円未満の運賃、自動販売機での3万円未満の購入、従業員への出張旅費・通勤手当などは帳簿のみの保存で可。</li>
           <li><strong>免税事業者からの仕入れ：</strong>経過措置により、2023年10月1日〜2031年9月30日の間は仕入税額相当額の一定割合（80%から70%・50%・30%へ段階的に縮小）を控除できる（帳簿への記載等が要件）。一の免税事業者等からの対象仕入れが年10億円（2026年10月1日以後に開始する課税期間は1億円）を超える部分には適用できない（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6498.htm" target="_blank" rel="noopener">No.6498</a>）。</li>
-          <li><strong>飲食料品の税率引下げ：</strong>2027年4月1日から2029年3月31日までの2年間、飲食料品の譲渡について消費税率が引き下げられる（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm" target="_blank" rel="noopener">No.6102</a>）。本辞書の「軽減8%」は現行の税率で、期間中の税率は国税庁の特設サイトで確認すること。</li>
+          <li><strong>飲食料品の税率引下げ：</strong>2027年4月1日から2029年3月31日までの2年間、飲食料品の譲渡について消費税率が引き下げられる（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm" target="_blank" rel="noopener">No.6102</a>）。本辞書の「軽減8%」は現行の税率で、期間中は1%になる（改正案。詳しくは「税率引下げ」タブ）。</li>
         </ul>
       </div>
       <p class="disclaimer">本辞書は一般的な取扱いをまとめたもので、個別の契約内容や事実関係によって区分が変わることがあります。最終的な判断は国税庁の資料や税理士にご確認ください。</p>

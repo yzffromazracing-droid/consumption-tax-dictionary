@@ -384,3 +384,22 @@ h5.article-h { font-size: 0.92rem; }
 .article-table { border-collapse: collapse; font-size: 0.85rem; min-width: 100%; }
 .article-table th, .article-table td { border: 1px solid var(--border); padding: 4px 8px; vertical-align: top; white-space: pre-line; text-align: left; }
 .article-table th { background: var(--bg); }
+
+/* 税率引下げタブ */
+.rc-alert { margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--border); border-left: 4px solid var(--k10); border-radius: 10px; background: var(--surface); font-size: 0.88rem; }
+.rc-alert p { margin: 0 0 6px; }
+.rc-alert p:last-child { margin-bottom: 0; }
+.rc-alert a, .guide-block a { color: var(--accent); }
+.rc-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; }
+.rc-toc a { padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--accent); font-size: 0.82rem; text-decoration: none; }
+#tab-ratecut .guide-block { scroll-margin-top: 110px; }
+.rc-h { margin: 14px 0 6px; font-size: 0.95rem; }
+.rc-p { margin: 0 0 8px; }
+.rc-table-wrap { overflow-x: auto; }
+.rc-table { border-collapse: collapse; font-size: 0.88rem; min-width: 100%; }
+.rc-table th, .rc-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: center; vertical-align: top; }
+.rc-table th { background: var(--bg); font-weight: 600; }
+.rc-schedule td, .rc-schedule th { text-align: left; }
+.rc-schedule td:first-child { width: 34%; }
+@media (min-width: 640px) { .rc-schedule td:first-child { width: auto; white-space: nowrap; } }
+.rc-qa li { font-size: 0.9rem; }
