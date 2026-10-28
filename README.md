@@ -25,6 +25,8 @@ npm run update-nta  # 国税庁ホームページから記事を再取得して 
 npm run update-tsutatsu  # 国税庁ホームページから通達を再取得して js/tsutatsu.js を再生成
 npm run update-kani      # 国税庁ホームページから簡易課税の事業区分の資料を再取得して js/kani.js を再生成
 npm run update-invoice   # 国税庁ホームページからインボイスの概要・Q&Aを再取得して js/invoice.js を再生成（pdftotext が必要）
+node scripts/report-changes.js      # 再取得したデータとコミット済みの版の変更点（Markdown）
+node scripts/check-ratecut.js       # 消費税率引下げ特設サイトの更新の有無
 ```
 
 `index.html` をブラウザで直接開いても動作します。
@@ -50,6 +52,9 @@ npm run update-invoice   # 国税庁ホームページからインボイスの�
 | `scripts/fetch-kani.js` | 国税庁ホームページから簡易課税の事業区分の資料（HTML）を取得 |
 | `scripts/build-kani.js` | 取得したHTMLから `js/kani.js` を生成（検索用の別名 `KEYWORDS` もここで定義） |
 | `scripts/kani-yomi.js` | 業種名・文章のよみを作る読み方辞書（`build-kani.js` から使う。読めない漢字があると生成が止まるので、語を足す） |
+| `scripts/report-changes.js` | 再取得したデータとコミット済みの版を比べ、追加・削除・変更を報告 |
+| `scripts/check-ratecut.js` | 消費税率引下げ特設サイトの新着情報・PDFを前回確認時（`scripts/ratecut-known.json`）と比べる |
+| `docs/monthly-update.md` | 月次更新（国税庁の情報の確認と反映）の手順 |
 | `scripts/fetch-invoice.js` | 国税庁ホームページからインボイスの概要（HTML）とQ&A（PDF）を取得 |
 | `scripts/build-invoice.js` | 取得したHTML・PDFから `js/invoice.js` を生成（PDFのテキスト抽出に pdftotext を使用） |
 | `scripts/facebook-post.js` | 辞書の項目を1日1件Facebookページに投稿（`.github/workflows/facebook-daily.yml` から毎日実行） |
@@ -93,3 +98,7 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 - 出典：国税庁ホームページ（取得日は `js/invoice.js` の `FETCHED_AT` と画面に表示）
 - 概要：タックスアンサー No.6498（適格請求書等保存方式）・No.6625（適格請求書等の記載事項）・No.6496（帳簿及び請求書等の保存）・No.6497（帳簿および請求書等の記載事項）の本文。
 - Q&A：[インボイス制度に関するQ&A 目次一覧](https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/qa_invoice_mokuji.htm)の全問。分類・問番号・見出し・問いは目次から、答えは各問のPDFの【答】の冒頭約300字を抜粋。図表・計算例を含む全文は原文で確認すること。
+
+## 月次更新
+
+毎月1回、国税庁ホームページの更新を確認し、更新があれば反映する。手順は [docs/monthly-update.md](docs/monthly-update.md)。

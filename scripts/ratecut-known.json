@@ -1,0 +1,55 @@
+{
+  "checked": "2026-10-28",
+  "url": "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/zeiritsuhikisage.htm",
+  "news": [
+    {
+      "date": "令和8年10月9日",
+      "items": [
+        "消費税率引下げに対応した消費税申告書様式（ドラフト版）を掲載しました。"
+      ]
+    },
+    {
+      "date": "令和8年10月6日",
+      "items": [
+        "説明動画（詳細版）を掲載しました。"
+      ]
+    },
+    {
+      "date": "令和8年9月15日",
+      "items": [
+        "特設サイトを開設しました。",
+        "リーフレット、パンフレット、Q＆A、説明動画を掲載しました。"
+      ]
+    }
+  ],
+  "pdfs": [
+    "https://www.cas.go.jp/jp/seisaku/shouhizei_zeigakukoujo/pdf/sankou4.pdf",
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_annai.pdf",
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_leaflet.pdf",
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_pamphlet.pdf",
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_qa.pdf",
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026010-002-01.pdf"
+  ],
+  "pdfInfo": {
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_annai.pdf": {
+      "lastModified": "Tue, 15 Sep 2026 08:57:50 GMT",
+      "size": 338424
+    },
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_leaflet.pdf": {
+      "lastModified": "Tue, 15 Sep 2026 08:57:50 GMT",
+      "size": 2365482
+    },
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_pamphlet.pdf": {
+      "lastModified": "Tue, 15 Sep 2026 08:57:49 GMT",
+      "size": 2749754
+    },
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026008-127_qa.pdf": {
+      "lastModified": "Tue, 15 Sep 2026 08:57:49 GMT",
+      "size": 2113467
+    },
+    "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/pdf/0026010-002-01.pdf": {
+      "lastModified": "Fri, 09 Oct 2026 08:30:03 GMT",
+      "size": 4075460
+    }
+  }
+}
