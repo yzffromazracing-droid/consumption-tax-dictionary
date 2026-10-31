@@ -72,6 +72,10 @@ main, .site-header > *, .site-footer {
   font-size: 1.25rem;
 }
 
+/* 画面上部（アプリ名の下）の検索欄 */
+.header-search { padding-top: 8px; padding-bottom: 4px; }
+.header-search input { padding: 10px 14px; }
+
 .tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 

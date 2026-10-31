@@ -858,6 +858,8 @@
 
   $("q").addEventListener("input", function (e) {
     state.q = e.target.value;
+    // 検索欄は画面上部にあり、ほかのタブを見ているときに入力したら横断検索の画面に切り替える
+    if ($("tab-dict").hidden) showTab("dict");
     render();
   });
 

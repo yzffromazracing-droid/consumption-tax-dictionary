@@ -10,6 +10,10 @@
 <body>
   <header class="site-header">
     <h1>消費税区分辞書</h1>
+    <!-- 横断検索の検索欄（どのタブからでも使える。入力すると横断検索の画面に切り替わる） -->
+    <div class="search-box header-search">
+      <input id="q" type="search" placeholder="品目・取引の区分を検索（例：駐車場、印紙、テイクアウト）" autocomplete="off" autofocus aria-label="品目・取引の消費税区分を検索">
+    </div>
     <nav class="tabs" role="tablist" aria-label="メニュー">
       <button class="tab is-active" role="tab" data-tab="dict" aria-selected="true">辞書</button>
       <button class="tab" role="tab" data-tab="tsu" aria-selected="false">通達</button>
@@ -30,9 +34,6 @@
   <main>
     <!-- 辞書 -->
     <section id="tab-dict" class="panel" role="tabpanel">
-      <div class="search-box">
-        <input id="q" type="search" placeholder="例：駐車場、印紙、テイクアウト、法定福利費" autocomplete="off" autofocus>
-      </div>
       <div class="filters">
         <div id="cat-filters" class="chips" aria-label="区分で絞り込み"></div>
         <select id="account-filter" aria-label="勘定科目で絞り込み">
