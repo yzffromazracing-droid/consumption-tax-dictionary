@@ -10,16 +10,20 @@
 <body>
   <header class="site-header">
     <h1>消費税区分辞書</h1>
-    <nav class="tabs" role="tablist">
+    <nav class="tabs" role="tablist" aria-label="メニュー">
       <button class="tab is-active" role="tab" data-tab="dict" aria-selected="true">辞書</button>
-      <button class="tab" role="tab" data-tab="ratecut" aria-selected="false">税率引下げ</button>
-      <button class="tab" role="tab" data-tab="flow" aria-selected="false">判定フロー</button>
-      <button class="tab" role="tab" data-tab="guide" aria-selected="false">区分の解説</button>
-      <button class="tab" role="tab" data-tab="kani" aria-selected="false">簡易課税</button>
       <button class="tab" role="tab" data-tab="tsu" aria-selected="false">通達</button>
       <button class="tab" role="tab" data-tab="nta" aria-selected="false">国税庁の記事</button>
       <button class="tab" role="tab" data-tab="cfa" aria-selected="false">こども家庭庁</button>
       <button class="tab" role="tab" data-tab="inv" aria-selected="false">インボイス</button>
+    </nav>
+    <!-- 辞書タブの下のメニュー（辞書を選んでいるときだけ表示） -->
+    <nav id="dict-subtabs" class="subtabs" role="tablist" aria-label="辞書のメニュー">
+      <button class="subtab is-active" role="tab" data-tab="dict" aria-selected="true">検索</button>
+      <button class="subtab" role="tab" data-tab="ratecut" aria-selected="false">税率引下げ</button>
+      <button class="subtab" role="tab" data-tab="flow" aria-selected="false">判定フロー</button>
+      <button class="subtab" role="tab" data-tab="guide" aria-selected="false">区分の解説</button>
+      <button class="subtab" role="tab" data-tab="kani" aria-selected="false">簡易課税</button>
     </nav>
   </header>
 
@@ -245,7 +249,7 @@
           <li><strong>軽減税率の判定時点：</strong>持ち帰りか店内飲食かは販売時点の意思確認で判定する。</li>
           <li><strong>インボイス：</strong>仕入税額控除には原則として適格請求書の保存が必要。公共交通機関の3万円未満の運賃、自動販売機での3万円未満の購入、従業員への出張旅費・通勤手当などは帳簿のみの保存で可。</li>
           <li><strong>免税事業者からの仕入れ：</strong>経過措置により、2023年10月1日〜2031年9月30日の間は仕入税額相当額の一定割合（80%から70%・50%・30%へ段階的に縮小）を控除できる（帳簿への記載等が要件）。一の免税事業者等からの対象仕入れが年10億円（2026年10月1日以後に開始する課税期間は1億円）を超える部分には適用できない（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6498.htm" target="_blank" rel="noopener">No.6498</a>）。</li>
-          <li><strong>飲食料品の税率引下げ：</strong>2027年4月1日から2029年3月31日までの2年間、飲食料品の譲渡について消費税率が引き下げられる（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm" target="_blank" rel="noopener">No.6102</a>）。本辞書の「軽減8%」は現行の税率で、期間中は1%になる（改正案。詳しくは「税率引下げ」タブ）。</li>
+          <li><strong>飲食料品の税率引下げ：</strong>2027年4月1日から2029年3月31日までの2年間、飲食料品の譲渡について消費税率が引き下げられる（<a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm" target="_blank" rel="noopener">No.6102</a>）。本辞書の「軽減8%」は現行の税率で、期間中は1%になる（改正案。詳しくは辞書の「税率引下げ」）。</li>
         </ul>
       </div>
       <p class="disclaimer">本辞書は一般的な取扱いをまとめたもので、個別の契約内容や事実関係によって区分が変わることがあります。最終的な判断は国税庁の資料や税理士にご確認ください。</p>

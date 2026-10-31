@@ -828,19 +828,29 @@
 
   /* ---------- タブ ---------- */
 
+  // 辞書タブの下に置いたメニュー（パネル名 → 上段のタブ）
+  var TAB_GROUP = { ratecut: "dict", flow: "dict", guide: "dict", kani: "dict" };
+
   function showTab(name) {
+    var group = TAB_GROUP[name] || name;
     document.querySelectorAll(".tab").forEach(function (t) {
+      var active = t.getAttribute("data-tab") === group;
+      t.classList.toggle("is-active", active);
+      t.setAttribute("aria-selected", String(active));
+    });
+    document.querySelectorAll(".subtab").forEach(function (t) {
       var active = t.getAttribute("data-tab") === name;
       t.classList.toggle("is-active", active);
       t.setAttribute("aria-selected", String(active));
     });
+    $("dict-subtabs").hidden = group !== "dict";
     document.querySelectorAll(".panel").forEach(function (p) {
       p.hidden = p.id !== "tab-" + name;
     });
     window.scrollTo(0, 0);
   }
 
-  document.querySelectorAll(".tab").forEach(function (t) {
+  document.querySelectorAll(".tab, .subtab").forEach(function (t) {
     t.addEventListener("click", function () {
       showTab(t.getAttribute("data-tab"));
     });
