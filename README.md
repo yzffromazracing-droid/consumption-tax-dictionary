@@ -103,4 +103,4 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 
 ## 月次更新
 
-毎月1回、国税庁ホームページの更新を確認し、更新があれば反映する。手順は [docs/monthly-update.md](docs/monthly-update.md)。
+毎月15日に、国税庁ホームページの更新を確認し、更新があれば反映する（定期実行）。手順は [docs/monthly-update.md](docs/monthly-update.md)。
