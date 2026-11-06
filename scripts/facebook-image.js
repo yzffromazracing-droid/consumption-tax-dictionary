@@ -175,6 +175,14 @@ function buildSvg(item) {
     out.push('<text x="136" y="' + ly + '" font-size="38" fill="#1f2937">' + esc(line) + "</text>");
   });
 
+  // 軽減8%の項目には税率引下げ（改正案）の予定を添える（文言は facebook-post.js の rateCutNote と合わせる）
+  if (item.cat === "k8") {
+    var rc = item.name.indexOf("新聞") !== -1 ? "税率引下げ後も8%のまま（改正案）" : "2027年4月〜 1%に引下げ予定（改正案）";
+    var rcW = Math.round(textWidth(rc) * 28 + 44);
+    out.push('<rect x="96" y="972" width="' + rcW + '" height="54" rx="27" fill="' + c.bg + '" stroke="' + c.main + '" stroke-width="3"/>');
+    out.push('<text x="' + (96 + rcW / 2) + '" y="1009" text-anchor="middle" font-size="28" font-weight="700" fill="' + c.main + '">' + esc(rc) + "</text>");
+  }
+
   // フッター
   out.push('<text x="984" y="1010" text-anchor="end" font-size="28" font-weight="700" fill="' + c.main + '">消費税区分辞書</text>');
   out.push("</svg>");

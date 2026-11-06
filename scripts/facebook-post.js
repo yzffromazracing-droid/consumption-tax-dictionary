@@ -38,6 +38,24 @@ function hashtag(s) {
   return "#" + s.replace(/[\s・（）()／/、%％]/g, "");
 }
 
+// 飲食料品の税率引下げ（改正案。index.html の「税率引下げ」タブと同じ内容）
+// 新聞の定期購読は引下げの対象外で8%のまま
+function rateCutNote(item) {
+  if (item.cat !== "k8") return null;
+  if (item.name.indexOf("新聞") !== -1) {
+    return [
+      "📢 税率引下げ（改正案）",
+      "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間、飲食料品の税率が8%→1%に引き下げられる予定ですが、新聞の定期購読は対象外で8%のままです。",
+    ];
+  }
+  return [
+    "📢 税率引下げ（改正案）",
+    "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間は、8%→1%に引き下げられる予定です（法案成立前の改正案のため、今後変わることがあります）。",
+    "・令和9年3月31日までに行った仕入れは、売るのが4月以後でも8%",
+    "・外食・ケータリング・酒類は10%のまま",
+  ];
+}
+
 function buildMessage(item, siteUrl) {
   var cat = data.CATEGORIES[item.cat];
   var lines = [];
@@ -64,13 +82,22 @@ function buildMessage(item, siteUrl) {
     lines.push("");
     lines.push("⚠ 注意：" + item.note);
   }
+  var rateCut = rateCutNote(item);
+  if (rateCut) {
+    lines.push("");
+    rateCut.forEach(function (l) { lines.push(l); });
+  }
   if (siteUrl) {
     lines.push("");
-    lines.push("ほかの取引の区分は「消費税区分辞書」で検索できます。");
+    lines.push(rateCut
+      ? "税率引下げの詳細（対象品目・経過措置・特例）は「消費税区分辞書」の「税率引下げ」で確認できます。"
+      : "ほかの取引の区分は「消費税区分辞書」で検索できます。");
     lines.push(siteUrl);
   }
   lines.push("");
-  lines.push(["#消費税", hashtag(cat.short), "#経理", "#インボイス"].join(" "));
+  var tags = ["#消費税", hashtag(cat.short), "#経理", "#インボイス"];
+  if (rateCut) tags.push("#税率引下げ");
+  lines.push(tags.join(" "));
   return lines.join("\n");
 }
 
@@ -139,4 +166,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, post: post };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post };

@@ -65,7 +65,7 @@ node scripts/check-ratecut.js       # 消費税率引下げ特設サイトの更
 
 ## Facebookへの毎日自動投稿
 
-GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつ図解カードの画像付きでFacebookページへ投稿します（160日で一巡）。画像が作れなかった日は文章だけで投稿します。
+GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつ図解カードの画像付きでFacebookページへ投稿します（160日で一巡）。画像が作れなかった日は文章だけで投稿します。軽減8%の項目の日は、飲食料品の税率引下げ（令和9年4月〜令和11年3月に1%、改正案）の予定も本文とカードに添えます（新聞の定期購読は8%のままと記載）。文言は `scripts/facebook-post.js` の `rateCutNote` と `scripts/facebook-image.js` にあるので、改正案が変わったら「税率引下げ」タブと合わせて直します。
 
 1. Facebookページを用意し、Meta for Developers でアプリを作成して `pages_manage_posts` 権限付きの**長期ページアクセストークン**を取得する（個人プロフィールへの投稿はAPIで不可。ページのみ）。
 2. リポジトリの Settings → Secrets and variables → Actions に登録する。
