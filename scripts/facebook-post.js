@@ -126,8 +126,9 @@ async function post(pageId, token, message, link, version, imageFile) {
   return json;
 }
 
-// 投稿の前に、トークンの持ち主（ページ名）と FB_PAGE_ID が合っているかをログに出す。
-// CI の変数がマスクされていても、ページ名は伏せ字にならないので原因を見分けられる。
+// 投稿の前に、トークンの持ち主と FB_PAGE_ID が合っているかをログに出す。
+// CI の変数がマスクされていても、一致・不一致で原因を見分けられる
+// （ログは公開されることがあるので、持ち主の名前やIDは出さない）。
 async function checkToken(pageId, token, version) {
   var url = "https://graph.facebook.com/" + (version || "v23.0") + "/me?fields=id,name&access_token=" + encodeURIComponent(token);
   try {
@@ -138,7 +139,7 @@ async function checkToken(pageId, token, version) {
       return;
     }
     var same = String(json.id) === String(pageId).trim();
-    console.log("トークンの持ち主：" + json.name + "／FB_PAGE_ID と" + (same ? "一致" : "不一致（ページのトークンでないか、ページIDが違います）"));
+    console.log("トークンの確認：持ち主と FB_PAGE_ID が" + (same ? "一致" : "不一致（ページのトークンでないか、ページIDが違います）"));
   } catch (e) {
     console.error("トークンの確認に失敗：" + e.message);
   }
