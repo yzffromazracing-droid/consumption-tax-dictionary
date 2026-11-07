@@ -126,6 +126,24 @@ async function post(pageId, token, message, link, version, imageFile) {
   return json;
 }
 
+// 投稿の前に、トークンの持ち主（ページ名）と FB_PAGE_ID が合っているかをログに出す。
+// CI の変数がマスクされていても、ページ名は伏せ字にならないので原因を見分けられる。
+async function checkToken(pageId, token, version) {
+  var url = "https://graph.facebook.com/" + (version || "v23.0") + "/me?fields=id,name&access_token=" + encodeURIComponent(token);
+  try {
+    var res = await fetch(url);
+    var json = await res.json().catch(function () { return {}; });
+    if (json.error) {
+      console.error("トークンの確認：使えません（" + json.error.message + "）");
+      return;
+    }
+    var same = String(json.id) === String(pageId).trim();
+    console.log("トークンの持ち主：" + json.name + "／FB_PAGE_ID と" + (same ? "一致" : "不一致（ページのトークンでないか、ページIDが違います）"));
+  } catch (e) {
+    console.error("トークンの確認に失敗：" + e.message);
+  }
+}
+
 async function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -155,6 +173,7 @@ async function main() {
     return;
   }
 
+  await checkToken(pageId, token, process.env.FB_GRAPH_VERSION);
   var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
   console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
