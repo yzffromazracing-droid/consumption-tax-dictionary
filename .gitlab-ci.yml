@@ -1,6 +1,6 @@
 # GitLab CI：サイトの公開（GitLab Pages）と Facebook への毎日の自動投稿
 #
-# - main へのプッシュ：テストを実行し、サイトを GitLab Pages に公開する
+# - main へのプッシュ、または変数なしの手動実行（Run pipeline）：テストを実行し、サイトを GitLab Pages に公開する
 # - パイプラインのスケジュール（変数 FACEBOOK_POST=1）：辞書の項目を1件 Facebook ページに投稿する
 # - 手動実行（Build → Pipelines → Run pipeline、変数 FACEBOOK_POST=1・DRY_RUN=1）：
 #   投稿せずに本文と画像だけ作る（画像はジョブの Artifacts からダウンロード）
@@ -22,6 +22,7 @@ test:
     - npm test
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web" && $FACEBOOK_POST != "1"
 
 pages:
   stage: deploy
@@ -33,6 +34,8 @@ pages:
       - public
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # 手動実行（Run pipeline）でも公開し直せる（FACEBOOK_POST=1 のときは投稿だけ）
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $FACEBOOK_POST != "1"
 
 facebook-post:
   stage: post
