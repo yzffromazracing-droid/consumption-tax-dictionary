@@ -129,20 +129,35 @@ async function post(pageId, token, message, link, version, imageFile) {
 // 投稿の前に、トークンの持ち主と FB_PAGE_ID が合っているかをログに出す。
 // CI の変数がマスクされていても、一致・不一致で原因を見分けられる
 // （ログは公開されることがあるので、持ち主の名前やIDは出さない）。
-async function checkToken(pageId, token, version) {
-  var url = "https://graph.facebook.com/" + (version || "v23.0") + "/me?fields=id,name&access_token=" + encodeURIComponent(token);
+// 個人（ユーザー）のトークンが入っていて、そのユーザーが FB_PAGE_ID のページを管理している場合は、
+// そのページのトークンを取り出して使う。ユーザーのトークンには期限があるので、ページのトークンに入れ替えるよう案内する。
+// 戻り値は投稿に使うトークン。
+async function resolveToken(pageId, token, version) {
+  var base = "https://graph.facebook.com/" + (version || "v23.0");
   try {
-    var res = await fetch(url);
-    var json = await res.json().catch(function () { return {}; });
-    if (json.error) {
-      console.error("トークンの確認：使えません（" + json.error.message + "）");
-      return;
+    var me = await (await fetch(base + "/me?fields=id&access_token=" + encodeURIComponent(token))).json();
+    if (me.error) {
+      console.error("トークンの確認：使えません（" + me.error.message + "）");
+      return token;
     }
-    var same = String(json.id) === String(pageId).trim();
-    console.log("トークンの確認：持ち主と FB_PAGE_ID が" + (same ? "一致" : "不一致（ページのトークンでないか、ページIDが違います）"));
+    if (String(me.id) === String(pageId).trim()) {
+      console.log("トークンの確認：持ち主と FB_PAGE_ID が一致");
+      return token;
+    }
+    var accounts = await (await fetch(base + "/me/accounts?fields=id,access_token&limit=100&access_token=" + encodeURIComponent(token))).json();
+    var page = (accounts.data || []).filter(function (a) { return String(a.id) === String(pageId).trim(); })[0];
+    if (page && page.access_token) {
+      console.log("トークンの確認：個人（ユーザー）のトークンです。管理しているページのトークンを取り出して投稿します。" +
+        "ユーザーのトークンには期限があるので、FB_PAGE_ACCESS_TOKEN を me/accounts の結果にあるページの access_token に入れ替えてください。");
+      return page.access_token;
+    }
+    console.log("トークンの確認：持ち主と FB_PAGE_ID が不一致" +
+      (accounts.error ? "（me/accounts を読めません：" + accounts.error.message + "）"
+        : "（このトークンで管理できるページ " + (accounts.data || []).length + " 件の中に FB_PAGE_ID のページがありません）"));
   } catch (e) {
     console.error("トークンの確認に失敗：" + e.message);
   }
+  return token;
 }
 
 async function main() {
@@ -174,7 +189,7 @@ async function main() {
     return;
   }
 
-  await checkToken(pageId, token, process.env.FB_GRAPH_VERSION);
+  token = await resolveToken(pageId, token, process.env.FB_GRAPH_VERSION);
   var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
   console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
