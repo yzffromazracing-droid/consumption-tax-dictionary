@@ -80,6 +80,8 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 
 GitLab でも、`.gitlab-ci.yml` でサイトの公開と Facebook への毎日の自動投稿ができる（GitHub と GitLab の両方で自動投稿を動かすと二重に投稿されるので、どちらか一方だけにする）。
 
+現在は GitHub から投稿しているため、`.gitlab-ci.yml` の `facebook-post` は止めてある（`when: never` の行）。GitLab から投稿するときは、その行を消して GitHub の `facebook-daily.yml` の `schedule` を止める。
+
 1. GitLab にプロジェクトを作り、このリポジトリをプッシュする。`main` へのプッシュでテストが走り、サイトが GitLab Pages に公開される（URL は Deploy → Pages に表示）。
 2. Settings → CI/CD → Variables に `FB_PAGE_ID` と `FB_PAGE_ACCESS_TOKEN` を登録する（Masked にする）。`SITE_URL` を登録しなければ GitLab Pages の URL を投稿に添える。
 3. Build → Pipeline schedules で新しいスケジュールを作る：間隔 `47 8 * * *`、タイムゾーン Tokyo、ブランチ `main`、変数 `FACEBOOK_POST` = `1`。

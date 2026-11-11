@@ -40,6 +40,10 @@ pages:
 facebook-post:
   stage: post
   rules:
+    # GitHub に戻したため GitLab からの投稿は停止中（GitHub Actions と二重に投稿しないため）。
+    # GitLab から投稿し直すときは、次の行を消して GitHub 側のワークフローを止める。
+    - if: $GITLAB_POSTING_STOPPED != "0"
+      when: never
     - if: ($CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web") && $FACEBOOK_POST == "1"
   before_script:
     - apt-get update -qq
