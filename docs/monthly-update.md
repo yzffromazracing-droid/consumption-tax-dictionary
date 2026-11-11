@@ -2,13 +2,8 @@
 
 毎月1回、国税庁ホームページの情報が更新されていないかを確認し、更新されていればアプリに反映する。
 この手順は、定期実行（Claude のルーティン「消費税区分辞書の月次更新」、毎月15日 8:47（日本時間））からも、手作業からも同じように使う。
-
-公開先は GitLab（プロジェクト `yzf.from.azracing/consumption-tax-dictionary`、公開ページ https://consumption-tax-dictionary-9e56d0.gitlab.io/ ）。
-`main` に push すると GitLab CI（`.gitlab-ci.yml`）がテストを実行し、GitLab Pages に公開する。GitHub への公開は当面行わない。
-
-- リポジトリ：`https://gitlab.com/yzf.from.azracing/consumption-tax-dictionary.git`（読み取りは認証なしで可）
-- 書き込み：作業環境に保存した gitlab.com の認証情報が、git の通信に自動で付く（トークンをファイルやコマンドに書かない）
-- 2026年11月1日の定期実行は、GitHub への push が拒否されて反映できなかった。11月7日に公開先を GitLab に切り替えた
+定期実行は、このリポジトリを push できる状態で付けた専用のセッション（「消費税区分辞書の月次更新（毎月15日）」）で動く。
+リポジトリが付いていない新しいセッションでは push が拒否されて反映できない（2026年11月1日の実行で確認）。
 
 ## 対象
 
@@ -24,13 +19,7 @@
 
 ## 手順
 
-1. GitLab の `main` を最新にして、作業ブランチ `monthly-update-YYYYMM` を作る。
-   ```sh
-   # リポジトリがなければクローンする（あれば gitlab の remote を確認して fetch）
-   git clone https://gitlab.com/yzf.from.azracing/consumption-tax-dictionary.git
-   cd consumption-tax-dictionary
-   git fetch origin main && git checkout -B monthly-update-YYYYMM origin/main
-   ```
+1. `main` を最新にして、作業ブランチ `monthly-update-YYYYMM` を作る。
 2. 取得は毎回**新しい空のディレクトリ**に行う（取得スクリプトは保存済みのファイルを再取得しないため）。
    ```sh
    D=$(mktemp -d)
@@ -57,8 +46,7 @@
 6. 変更がある場合：
    - `npm test` がすべて成功することを確認する。失敗したら原因を直す。直せない場合は反映せずに報告する。
    - README の件数（例：「質疑応答事例『消費税』（272件）」）が変わっていれば直す。
-   - 変更点（`node scripts/report-changes.js` の出力の要点）をコミットメッセージに書いてコミットし、作業ブランチを GitLab に push する。
-   - GitLab の `main` を fetch し直し、作業ブランチが `main` の先頭から分かれていれば（早送りできれば）`git push origin HEAD:main` で反映する。`main` が先に進んでいた場合は、作業ブランチを `main` に rebase してテストし直してから push する。
-   - 反映後、公開ページ（https://consumption-tax-dictionary-9e56d0.gitlab.io/ ）に変更が出るまで待って確認する（GitLab CI のテストと公開に数分かかる）。10分以上たっても反映されない場合は、GitLab の Build → Pipelines の確認が必要と報告する。
-   - テストが失敗して直せない場合や、取得の失敗・件数の大幅な減少があった場合は、`main` には反映せず作業ブランチだけを push して報告する。
-7. 結果（更新の有無、反映した内容、反映したコミット、公開ページでの確認結果、失敗した取得があればその内容）を日本語で報告する。
+   - `node scripts/report-changes.js` の出力を本文にしてプルリクエストを作り、テストが成功していればマージする（GitHub Pages に反映される）。
+   - プルリクエストを作るツールが使えない場合は、作業ブランチを push したうえで `main` に `--no-ff` でマージし（コミットメッセージに変更点の報告を書く）、`git push origin main` で反映する。
+   - テストが失敗して直せない場合や、取得の失敗・件数の大幅な減少があった場合は、マージせず作業ブランチだけを push して報告する。
+7. 結果（更新の有無、反映した内容、プルリクエストのURL、失敗した取得があればその内容）を日本語で報告する。

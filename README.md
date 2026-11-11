@@ -115,4 +115,4 @@ GitLab でも、`.gitlab-ci.yml` でサイトの公開と Facebook への毎日�
 
 ## 月次更新
 
-毎月15日に、国税庁ホームページの更新を確認し、更新があれば GitLab の `main` に反映して GitLab Pages に公開する（定期実行）。手順は [docs/monthly-update.md](docs/monthly-update.md)。
+毎月15日に、国税庁ホームページの更新を確認し、更新があれば反映する（定期実行）。手順は [docs/monthly-update.md](docs/monthly-update.md)。
