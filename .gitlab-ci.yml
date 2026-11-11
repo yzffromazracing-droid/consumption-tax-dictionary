@@ -1,0 +1,65 @@
+# GitLab CI：サイトの公開（GitLab Pages）と Facebook への毎日の自動投稿
+#
+# - main へのプッシュ、または変数なしの手動実行（Run pipeline）：テストを実行し、サイトを GitLab Pages に公開する
+# - パイプラインのスケジュール（変数 FACEBOOK_POST=1）：辞書の項目を1件 Facebook ページに投稿する
+# - 手動実行（Build → Pipelines → Run pipeline、変数 FACEBOOK_POST=1・DRY_RUN=1）：
+#   投稿せずに本文と画像だけ作る（画像はジョブの Artifacts からダウンロード）
+#
+# CI/CD の変数（Settings → CI/CD → Variables）に FB_PAGE_ID と FB_PAGE_ACCESS_TOKEN（Masked）を登録する。
+# SITE_URL を登録しなければ、このプロジェクトの GitLab Pages の URL を投稿に添える。
+
+default:
+  image: node:22-bookworm
+
+stages:
+  - test
+  - deploy
+  - post
+
+test:
+  stage: test
+  script:
+    - npm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web" && $FACEBOOK_POST != "1"
+
+pages:
+  stage: deploy
+  script:
+    - mkdir -p public
+    - cp -r index.html css js public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # 手動実行（Run pipeline）でも公開し直せる（FACEBOOK_POST=1 のときは投稿だけ）
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $FACEBOOK_POST != "1"
+
+facebook-post:
+  stage: post
+  rules:
+    # GitHub に戻したため GitLab からの投稿は停止中（GitHub Actions と二重に投稿しないため）。
+    # GitLab から投稿し直すときは、次の行を消して GitHub 側のワークフローを止める。
+    - if: $GITLAB_POSTING_STOPPED != "0"
+      when: never
+    - if: ($CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web") && $FACEBOOK_POST == "1"
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends librsvg2-bin fonts-noto-cjk >/dev/null
+  script:
+    # 画像が作れなくても文章だけで投稿する
+    - node scripts/facebook-image.js "$CI_PROJECT_DIR/card.png" || echo "画像を作れなかったため文章だけで投稿します"
+    - export SITE_URL="${SITE_URL:-${CI_PAGES_URL:+$CI_PAGES_URL/}}"
+    - |
+      if [ "$DRY_RUN" = "1" ]; then
+        node scripts/facebook-post.js --image="$CI_PROJECT_DIR/card.png" --dry-run
+      else
+        node scripts/facebook-post.js --image="$CI_PROJECT_DIR/card.png"
+      fi
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - card.png

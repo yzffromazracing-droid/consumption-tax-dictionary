@@ -56,3 +56,19 @@ test("画像があれば /photos に写真と説明文を送る", async (t) => {
   assert.equal(calls[1].url, "https://graph.facebook.com/v23.0/123/feed");
   assert.equal(calls[1].body.get("link"), "https://example.com/");
 });
+
+test("軽減8%の項目には税率引下げ（改正案）を載せ、新聞の定期購読は8%のままと書く", () => {
+  const { rateCutNote } = require("../scripts/facebook-post.js");
+  for (const item of ITEMS) {
+    const msg = buildMessage(item, "https://example.com/");
+    if (item.cat !== "k8") {
+      assert.equal(rateCutNote(item), null, item.name);
+      assert.doesNotMatch(msg, /税率引下げ/, item.name);
+    } else if (item.name.includes("新聞")) {
+      assert.match(msg, /新聞の定期購読は対象外で8%のまま/, item.name);
+    } else {
+      assert.match(msg, /令和11年（2029年）3月31日の2年間は、8%→1%に引き下げられる予定/, item.name);
+      assert.match(msg, /#税率引下げ/, item.name);
+    }
+  }
+});

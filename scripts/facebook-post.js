@@ -38,6 +38,24 @@ function hashtag(s) {
   return "#" + s.replace(/[\s・（）()／/、%％]/g, "");
 }
 
+// 飲食料品の税率引下げ（改正案。index.html の「税率引下げ」タブと同じ内容）
+// 新聞の定期購読は引下げの対象外で8%のまま
+function rateCutNote(item) {
+  if (item.cat !== "k8") return null;
+  if (item.name.indexOf("新聞") !== -1) {
+    return [
+      "📢 税率引下げ（改正案）",
+      "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間、飲食料品の税率が8%→1%に引き下げられる予定ですが、新聞の定期購読は対象外で8%のままです。",
+    ];
+  }
+  return [
+    "📢 税率引下げ（改正案）",
+    "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間は、8%→1%に引き下げられる予定です（法案成立前の改正案のため、今後変わることがあります）。",
+    "・令和9年3月31日までに行った仕入れは、売るのが4月以後でも8%",
+    "・外食・ケータリング・酒類は10%のまま",
+  ];
+}
+
 function buildMessage(item, siteUrl) {
   var cat = data.CATEGORIES[item.cat];
   var lines = [];
@@ -64,13 +82,22 @@ function buildMessage(item, siteUrl) {
     lines.push("");
     lines.push("⚠ 注意：" + item.note);
   }
+  var rateCut = rateCutNote(item);
+  if (rateCut) {
+    lines.push("");
+    rateCut.forEach(function (l) { lines.push(l); });
+  }
   if (siteUrl) {
     lines.push("");
-    lines.push("ほかの取引の区分は「消費税区分辞書」で検索できます。");
+    lines.push(rateCut
+      ? "税率引下げの詳細（対象品目・経過措置・特例）は「消費税区分辞書」の「税率引下げ」で確認できます。"
+      : "ほかの取引の区分は「消費税区分辞書」で検索できます。");
     lines.push(siteUrl);
   }
   lines.push("");
-  lines.push(["#消費税", hashtag(cat.short), "#経理", "#インボイス"].join(" "));
+  var tags = ["#消費税", hashtag(cat.short), "#経理", "#インボイス"];
+  if (rateCut) tags.push("#税率引下げ");
+  lines.push(tags.join(" "));
   return lines.join("\n");
 }
 
@@ -97,6 +124,40 @@ async function post(pageId, token, message, link, version, imageFile) {
     throw new Error("Facebook API error " + res.status + ": " + (err.message || JSON.stringify(json)));
   }
   return json;
+}
+
+// 投稿の前に、トークンの持ち主と FB_PAGE_ID が合っているかをログに出す。
+// CI の変数がマスクされていても、一致・不一致で原因を見分けられる
+// （ログは公開されることがあるので、持ち主の名前やIDは出さない）。
+// 個人（ユーザー）のトークンが入っていて、そのユーザーが FB_PAGE_ID のページを管理している場合は、
+// そのページのトークンを取り出して使う。ユーザーのトークンには期限があるので、ページのトークンに入れ替えるよう案内する。
+// 戻り値は投稿に使うトークン。
+async function resolveToken(pageId, token, version) {
+  var base = "https://graph.facebook.com/" + (version || "v23.0");
+  try {
+    var me = await (await fetch(base + "/me?fields=id&access_token=" + encodeURIComponent(token))).json();
+    if (me.error) {
+      console.error("トークンの確認：使えません（" + me.error.message + "）");
+      return token;
+    }
+    if (String(me.id) === String(pageId).trim()) {
+      console.log("トークンの確認：持ち主と FB_PAGE_ID が一致");
+      return token;
+    }
+    var accounts = await (await fetch(base + "/me/accounts?fields=id,access_token&limit=100&access_token=" + encodeURIComponent(token))).json();
+    var page = (accounts.data || []).filter(function (a) { return String(a.id) === String(pageId).trim(); })[0];
+    if (page && page.access_token) {
+      console.log("トークンの確認：個人（ユーザー）のトークンです。管理しているページのトークンを取り出して投稿します。" +
+        "ユーザーのトークンには期限があるので、FB_PAGE_ACCESS_TOKEN を me/accounts の結果にあるページの access_token に入れ替えてください。");
+      return page.access_token;
+    }
+    console.log("トークンの確認：持ち主と FB_PAGE_ID が不一致" +
+      (accounts.error ? "（me/accounts を読めません：" + accounts.error.message + "）"
+        : "（このトークンで管理できるページ " + (accounts.data || []).length + " 件の中に FB_PAGE_ID のページがありません）"));
+  } catch (e) {
+    console.error("トークンの確認に失敗：" + e.message);
+  }
+  return token;
 }
 
 async function main() {
@@ -128,6 +189,7 @@ async function main() {
     return;
   }
 
+  token = await resolveToken(pageId, token, process.env.FB_GRAPH_VERSION);
   var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
   console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
@@ -139,4 +201,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, post: post };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post };

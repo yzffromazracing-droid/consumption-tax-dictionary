@@ -61,11 +61,12 @@ node scripts/check-ratecut.js       # 消費税率引下げ特設サイトの更
 | `scripts/build-invoice.js` | 取得したHTML・PDFから `js/invoice.js` を生成（PDFのテキスト抽出に pdftotext を使用） |
 | `scripts/facebook-post.js` | 辞書の項目を1日1件Facebookページに投稿（`.github/workflows/facebook-daily.yml` から毎日実行） |
 | `scripts/facebook-image.js` | 投稿に添える図解カード（項目名・区分・勘定科目・具体例と区分ごとの挿絵、1080×1080のPNG）を生成（`rsvg-convert` と日本語フォントが必要） |
+| `.gitlab-ci.yml` | GitLab 用：テスト・GitLab Pages への公開・Facebook への自動投稿（スケジュール実行） |
 | `tests/` | `node --test` によるテスト |
 
 ## Facebookへの毎日自動投稿
 
-GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつ図解カードの画像付きでFacebookページへ投稿します（160日で一巡）。画像が作れなかった日は文章だけで投稿します。
+GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日本時間）に、辞書の項目を1件ずつ図解カードの画像付きでFacebookページへ投稿します（160日で一巡）。画像が作れなかった日は文章だけで投稿します。軽減8%の項目の日は、飲食料品の税率引下げ（令和9年4月〜令和11年3月に1%、改正案）の予定も本文とカードに添えます（新聞の定期購読は8%のままと記載）。文言は `scripts/facebook-post.js` の `rateCutNote` と `scripts/facebook-image.js` にあるので、改正案が変わったら「税率引下げ」タブと合わせて直します。
 
 1. Facebookページを用意し、Meta for Developers でアプリを作成して `pages_manage_posts` 権限付きの**長期ページアクセストークン**を取得する（個人プロフィールへの投稿はAPIで不可。ページのみ）。
 2. リポジトリの Settings → Secrets and variables → Actions に登録する。
@@ -74,6 +75,17 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文と画像（実行結果の Artifacts の `card`）を確認し、その後チェックなしで実行して投稿を確認する。
 
 手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`、`node scripts/facebook-image.js card.svg --date=2026-10-12`（SVGならブラウザで開ける）
+
+## GitLab での公開と自動投稿
+
+GitLab でも、`.gitlab-ci.yml` でサイトの公開と Facebook への毎日の自動投稿ができる（GitHub と GitLab の両方で自動投稿を動かすと二重に投稿されるので、どちらか一方だけにする）。
+
+現在は GitHub から投稿しているため、`.gitlab-ci.yml` の `facebook-post` は止めてある（`when: never` の行）。GitLab から投稿するときは、その行を消して GitHub の `facebook-daily.yml` の `schedule` を止める。
+
+1. GitLab にプロジェクトを作り、このリポジトリをプッシュする。`main` へのプッシュでテストが走り、サイトが GitLab Pages に公開される（URL は Deploy → Pages に表示）。
+2. Settings → CI/CD → Variables に `FB_PAGE_ID` と `FB_PAGE_ACCESS_TOKEN` を登録する（Masked にする）。`SITE_URL` を登録しなければ GitLab Pages の URL を投稿に添える。
+3. Build → Pipeline schedules で新しいスケジュールを作る：間隔 `47 8 * * *`、タイムゾーン Tokyo、ブランチ `main`、変数 `FACEBOOK_POST` = `1`。
+4. 確認：Build → Pipelines → Run pipeline で変数 `FACEBOOK_POST` = `1` と `DRY_RUN` = `1` を指定して実行すると、投稿せずに本文を表示し、画像をジョブの Artifacts（`card.png`）に残す。
 
 ## 国税庁の記事データ
 
