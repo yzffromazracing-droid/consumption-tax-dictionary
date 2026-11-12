@@ -3,6 +3,7 @@ name: Facebook daily post
 on:
   schedule:
     # 毎日 8:47 JST（23:47 UTC）。毎時0分は混雑で遅れやすいのでずらしている
+    # （アカウント停止明けに定期実行が止まったときは、このファイルを保存し直すと再開する）
     - cron: "47 23 * * *"
   workflow_dispatch:
     inputs:
