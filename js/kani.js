@@ -15,7 +15,7 @@
 (function (root) {
   "use strict";
 
-  var FETCHED_AT = "2026-10-16";
+  var FETCHED_AT = "2026-11-15";
 
   var SOURCES = [
     {"title":"No.6509 簡易課税制度の事業区分","url":"https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6509.htm"},
