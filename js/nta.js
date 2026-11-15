@@ -2,7 +2,7 @@
  * 国税庁ホームページに掲載されている消費税関係の記事一覧（自動生成）
  *
  *   出典：国税庁ホームページ（https://www.nta.go.jp/）
- *   取得日：2026-11-01
+ *   取得日：2026-11-14
  *   生成：node scripts/fetch-nta.js <dir> && node scripts/build-nta.js <dir>
  *
  * 各記事:
@@ -19,7 +19,7 @@
 (function (root) {
   "use strict";
 
-  var FETCHED_AT = "2026-11-01";
+  var FETCHED_AT = "2026-11-14";
 
   var TYPES = {
     taxanswer: { label: "タックスアンサー", index: "https://www.nta.go.jp/taxes/shiraberu/taxanswer/code/index.htm" },

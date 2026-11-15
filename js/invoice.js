@@ -2,7 +2,7 @@
  * インボイス制度の概要と「インボイス制度に関するQ&A」（自動生成）
  *
  *   出典：国税庁ホームページ（タックスアンサー、インボイス制度特設サイト）
- *   取得日：2026-10-09
+ *   取得日：2026-11-15
  *   生成：node scripts/fetch-invoice.js <dir> && node scripts/build-invoice.js <dir>
  *
  * OVERVIEW : 概要として掲載するタックスアンサー（title, url, asOf, sections[{heading, level, paragraphs}]）
@@ -13,7 +13,7 @@
 (function (root) {
   "use strict";
 
-  var FETCHED_AT = "2026-10-09";
+  var FETCHED_AT = "2026-11-15";
 
   var QA_INDEX = "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/qa_invoice_mokuji.htm";
 

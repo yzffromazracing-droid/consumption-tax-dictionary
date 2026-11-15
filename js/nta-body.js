@@ -1,7 +1,7 @@
 /*
  * 国税庁ホームページの消費税関係の記事の全文（自動生成。手で編集しない）
  *
- *   出典：国税庁ホームページ（https://www.nta.go.jp/）　取得日：2026-11-01
+ *   出典：国税庁ホームページ（https://www.nta.go.jp/）　取得日：2026-11-14
  *   生成：node scripts/build-nta.js <dir>
  *
  * 記事のURL → 本文のブロックの配列（形式は scripts/build-nta.js の bodyBlocks を参照）。
