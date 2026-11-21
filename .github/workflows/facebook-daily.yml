@@ -36,8 +36,7 @@ jobs:
         env:
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
-          # Variables の SITE_URL があればそちらを使う
-          SITE_URL: ${{ vars.SITE_URL || 'https://yzffromazracing-droid.github.io/consumption-tax-dictionary/' }}
+          # 投稿に公開ページのアドレス（SITE_URL）は入れない
         run: node scripts/facebook-post.js --image="$RUNNER_TEMP/card.png" ${{ inputs.dry_run && '--dry-run' || '' }} ${{ inputs.check_token && '--check-token' || '' }}
       - name: Upload card image
         if: ${{ inputs.dry_run }}

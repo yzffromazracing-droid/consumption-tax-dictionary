@@ -71,7 +71,7 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 1. Facebookページを用意し、Meta for Developers でアプリを作成して `pages_manage_posts` 権限付きの**長期ページアクセストークン**を取得する（個人プロフィールへの投稿はAPIで不可。ページのみ）。
 2. リポジトリの Settings → Secrets and variables → Actions に登録する。
    - Secrets：`FB_PAGE_ID`（ページID）、`FB_PAGE_ACCESS_TOKEN`（ページアクセストークン）
-   - Variables（任意）：`SITE_URL`（投稿に添えるサイトのURL。未設定なら GitHub Pages の `https://yzffromazracing-droid.github.io/consumption-tax-dictionary/`）
+   - 投稿には公開ページのアドレスを入れない（ワークフローで `SITE_URL` を渡していない。入れたいときは `facebook-daily.yml` の投稿のステップに `SITE_URL` を足す）
 3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文と画像（実行結果の Artifacts の `card`）を確認し、その後チェックなしで実行して投稿を確認する。
 
 GitHub の定期実行は遅れたり動かなかったりするため、8:47 から2時間たっても今日の実行がないときは、Claude の定期実行（毎日 10:47）がワークフローを手動実行して投稿する。同じ日に2回動いても、投稿前に Facebook ページに今日の「【今日の消費税区分】」の投稿があれば投稿しない（`--force` を付けたときを除く）。
