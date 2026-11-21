@@ -19,6 +19,8 @@
 var fs = require("fs");
 var path = require("path");
 var data = require("../js/data.js");
+var nta = require("../js/nta.js");
+var tsutatsu = require("../js/tsutatsu.js");
 
 var DAY_MS = 24 * 60 * 60 * 1000;
 var JST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -40,12 +42,14 @@ function hashtag(s) {
 
 // 飲食料品の税率引下げ（改正案。index.html の「税率引下げ」タブと同じ内容）
 // 新聞の定期購読は引下げの対象外で8%のまま
+var RATECUT_URL = "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/zeiritsuhikisage.htm";
 function rateCutNote(item) {
   if (item.cat !== "k8") return null;
   if (item.name.indexOf("新聞") !== -1) {
     return [
       "📢 税率引下げ（改正案）",
       "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間、飲食料品の税率が8%→1%に引き下げられる予定ですが、新聞の定期購読は対象外で8%のままです。",
+      "国税庁 消費税率引下げ特設サイト：" + RATECUT_URL,
     ];
   }
   return [
@@ -53,7 +57,28 @@ function rateCutNote(item) {
     "令和9年（2027年）4月1日〜令和11年（2029年）3月31日の2年間は、8%→1%に引き下げられる予定です（法案成立前の改正案のため、今後変わることがあります）。",
     "・令和9年3月31日までに行った仕入れは、売るのが4月以後でも8%",
     "・外食・ケータリング・酒類は10%のまま",
+    "国税庁 消費税率引下げ特設サイト：" + RATECUT_URL,
   ];
+}
+
+// 項目に付けた国税庁の関連記事（refs）と消費税法基本通達（tsutatsu）のリンク。投稿が長くなりすぎないよう件数を絞る
+var MAX_NTA_LINKS = 3;
+var MAX_TSUTATSU_LINKS = 2;
+function ntaLinks(item) {
+  var lines = [];
+  (item.refs || []).slice(0, MAX_NTA_LINKS).forEach(function (url) {
+    var a = nta.ARTICLES.filter(function (x) { return x.url === url; })[0];
+    var label = a ? nta.TYPES[a.type].label + (a.type === "taxanswer" ? " No." + a.no + " " : " ") + a.title : "国税庁";
+    lines.push("・" + label);
+    lines.push(url);
+  });
+  (item.tsutatsu || []).slice(0, MAX_TSUTATSU_LINKS).forEach(function (no) {
+    var a = tsutatsu.ARTICLES.filter(function (x) { return x.no === no && x.type === "kihon"; })[0];
+    if (!a) return;
+    lines.push("・消費税法基本通達 " + a.no + " " + a.title);
+    lines.push(a.url);
+  });
+  return lines;
 }
 
 function buildMessage(item, siteUrl) {
@@ -86,6 +111,12 @@ function buildMessage(item, siteUrl) {
   if (rateCut) {
     lines.push("");
     rateCut.forEach(function (l) { lines.push(l); });
+  }
+  var links = ntaLinks(item);
+  if (links.length) {
+    lines.push("");
+    lines.push("■ 国税庁の関連ページ");
+    links.forEach(function (l) { lines.push(l); });
   }
   if (siteUrl) {
     lines.push("");
@@ -260,4 +291,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post, checkToken: checkToken, alreadyPostedToday: alreadyPostedToday };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, ntaLinks: ntaLinks, post: post, checkToken: checkToken, alreadyPostedToday: alreadyPostedToday };
