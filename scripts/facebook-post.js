@@ -183,6 +183,29 @@ async function checkToken(pageId, token, version) {
   return same && d.type === "PAGE" && !d.expires_at;
 }
 
+// 今日（日本時間）すでに「【今日の消費税区分】」の投稿がページにあるかを調べる。
+// GitHub の定期実行の遅れに備えて別の仕組みから強制実行することがあるので、二重投稿を防ぐ。
+// 調べられなかったときは false（投稿する）を返す。
+async function alreadyPostedToday(pageId, token, version, now) {
+  var url = "https://graph.facebook.com/" + (version || "v23.0") + "/" + encodeURIComponent(pageId) +
+    "/published_posts?fields=created_time,message&limit=10&access_token=" + encodeURIComponent(token);
+  try {
+    var json = await (await fetch(url)).json();
+    if (json.error || !Array.isArray(json.data)) {
+      console.log("今日の投稿の確認：できませんでした" + (json.error ? "（" + json.error.message + "）" : "") + "。投稿を続けます。");
+      return false;
+    }
+    var today = dayIndex(now || new Date());
+    return json.data.some(function (p) {
+      return p.message && p.message.indexOf("【今日の消費税区分】") === 0 &&
+        dayIndex(new Date(p.created_time)) === today;
+    });
+  } catch (e) {
+    console.log("今日の投稿の確認：できませんでした（" + e.message + "）。投稿を続けます。");
+    return false;
+  }
+}
+
 async function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -222,6 +245,10 @@ async function main() {
   }
 
   token = await resolveToken(pageId, token, process.env.FB_GRAPH_VERSION);
+  if (args.indexOf("--force") === -1 && await alreadyPostedToday(pageId, token, process.env.FB_GRAPH_VERSION)) {
+    console.log("skipped: 今日はすでに投稿済みのため、投稿しませんでした（" + item.name + "）");
+    return;
+  }
   var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
   console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
@@ -233,4 +260,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post, checkToken: checkToken };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post, checkToken: checkToken, alreadyPostedToday: alreadyPostedToday };
