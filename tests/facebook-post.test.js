@@ -72,3 +72,24 @@ test("軽減8%の項目には税率引下げ（改正案）を載せ、新聞の
     }
   }
 });
+
+test("今日すでに投稿があれば二重に投稿しない（日本時間で判定）", async (t) => {
+  const { alreadyPostedToday } = require("../scripts/facebook-post.js");
+  const now = new Date("2026-11-21T10:00:00+09:00");
+  const posts = (list) => t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data: list })));
+  // 今日（JST）の投稿あり
+  let m = posts([{ created_time: "2026-11-21T00:10:00+0000", message: "【今日の消費税区分】立替金" }]);
+  assert.equal(await alreadyPostedToday("1", "t", "v23.0", now), true);
+  m.mock.restore();
+  // 前日（JST）の投稿だけ：UTC では同じ日付でも JST では前日
+  m = posts([{ created_time: "2026-11-20T14:59:00+0000", message: "【今日の消費税区分】前日" }]);
+  assert.equal(await alreadyPostedToday("1", "t", "v23.0", now), false);
+  m.mock.restore();
+  // 今日の投稿でも、自動投稿以外（手で書いた投稿）は数えない
+  m = posts([{ created_time: "2026-11-21T01:00:00+0000", message: "お知らせ" }]);
+  assert.equal(await alreadyPostedToday("1", "t", "v23.0", now), false);
+  m.mock.restore();
+  // 確認できないときは投稿を続ける
+  m = t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ error: { message: "x" } })));
+  assert.equal(await alreadyPostedToday("1", "t", "v23.0", now), false);
+});
