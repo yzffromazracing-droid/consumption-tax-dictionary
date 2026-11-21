@@ -30,8 +30,11 @@ test("全項目の投稿本文に名前・区分・説明が入り、Facebookの
   }
 });
 
-test("SITE_URL がなければリンクを入れない", () => {
-  assert.doesNotMatch(buildMessage(ITEMS[0], ""), /https?:/);
+test("SITE_URL がなければ公開ページのアドレスを入れない（国税庁のリンクだけ）", () => {
+  for (const item of ITEMS) {
+    const msg = buildMessage(item, "");
+    assert.doesNotMatch(msg, /github\.io|消費税区分辞書」で/, item.name);
+  }
 });
 
 test("画像があれば /photos に写真と説明文を送る", async (t) => {
@@ -92,4 +95,18 @@ test("今日すでに投稿があれば二重に投稿しない（日本時間�
   // 確認できないときは投稿を続ける
   m = t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ error: { message: "x" } })));
   assert.equal(await alreadyPostedToday("1", "t", "v23.0", now), false);
+});
+
+test("国税庁の関連ページ（タックスアンサー等・基本通達）のリンクを載せ、公開ページのアドレスは載せない", () => {
+  const { ntaLinks } = require("../scripts/facebook-post.js");
+  for (const item of ITEMS) {
+    const msg = buildMessage(item, "");
+    const links = ntaLinks(item);
+    for (const l of links) assert.ok(msg.includes(l), item.name);
+    for (const url of msg.match(/https?:\/\/\S+/g) || []) assert.match(url, /^https:\/\/www\.nta\.go\.jp\//, `${item.name}: ${url}`);
+    if ((item.refs || []).length || (item.tsutatsu || []).length) assert.match(msg, /■ 国税庁の関連ページ/, item.name);
+    assert.ok(msg.length < 3000, `${item.name}: 長すぎる`);
+  }
+  const k8 = ITEMS.find((i) => i.cat === "k8");
+  assert.match(buildMessage(k8, ""), /消費税率引下げ特設サイト：https:\/\/www\.nta\.go\.jp\//);
 });
