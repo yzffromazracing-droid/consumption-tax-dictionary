@@ -74,6 +74,8 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
    - Variables（任意）：`SITE_URL`（投稿に添えるサイトのURL。未設定なら GitHub Pages の `https://yzffromazracing-droid.github.io/consumption-tax-dictionary/`）
 3. Actions タブの「Facebook daily post」→「Run workflow」で `dry_run` にチェックして本文と画像（実行結果の Artifacts の `card`）を確認し、その後チェックなしで実行して投稿を確認する。
 
+トークンの確認：Actions の「Run workflow」で `check_token` にチェックして実行すると、投稿せずにトークンがページのものか・有効期限（「なし」なら期限なし）をログに出す。
+
 手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`、`node scripts/facebook-image.js card.svg --date=2026-10-12`（SVGならブラウザで開ける）
 
 ## GitLab での公開と自動投稿

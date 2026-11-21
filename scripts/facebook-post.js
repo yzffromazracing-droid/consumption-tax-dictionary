@@ -160,6 +160,29 @@ async function resolveToken(pageId, token, version) {
   return token;
 }
 
+// 投稿せずにトークンだけを確かめる（--check-token）。持ち主と FB_PAGE_ID の一致、
+// トークンの種類と有効期限をログに出す（ログは公開されることがあるので、名前やIDは出さない）。
+async function checkToken(pageId, token, version) {
+  var base = "https://graph.facebook.com/" + (version || "v23.0");
+  var me = await (await fetch(base + "/me?fields=id&access_token=" + encodeURIComponent(token))).json();
+  if (me.error) {
+    console.log("トークンの確認：使えません（" + me.error.message + "）");
+    return false;
+  }
+  var same = String(me.id) === String(pageId).trim();
+  console.log("トークンの確認：持ち主と FB_PAGE_ID が" + (same ? "一致" : "不一致（ページのトークンでないか、ページIDが違います）"));
+  var dbg = await (await fetch(base + "/debug_token?input_token=" + encodeURIComponent(token) + "&access_token=" + encodeURIComponent(token))).json();
+  var d = dbg.data || {};
+  if (dbg.error || !d.type) {
+    console.log("トークンの種類・期限：確認できません" + (dbg.error ? "（" + dbg.error.message + "）" : ""));
+    return same;
+  }
+  var exp = d.expires_at ? new Date(d.expires_at * 1000).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) + "（日本時間）" : "なし（期限なし）";
+  console.log("トークンの種類：" + (d.type === "PAGE" ? "ページ（Page）" : d.type === "USER" ? "個人（User）" : d.type));
+  console.log("トークンの有効期限：" + exp);
+  return same && d.type === "PAGE" && !d.expires_at;
+}
+
 async function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -183,6 +206,15 @@ async function main() {
 
   var pageId = process.env.FB_PAGE_ID;
   var token = process.env.FB_PAGE_ACCESS_TOKEN;
+  if (args.indexOf("--check-token") !== -1) {
+    if (!pageId || !token) {
+      console.log("FB_PAGE_ID / FB_PAGE_ACCESS_TOKEN が未設定です。");
+      process.exit(1);
+    }
+    var ok = await checkToken(pageId, token, process.env.FB_GRAPH_VERSION);
+    console.log(ok ? "結果：このトークンで毎日の投稿に使えます。" : "結果：このままでは投稿に失敗するか、期限で止まります。");
+    return;
+  }
   if (dryRun || !pageId || !token) {
     if (!dryRun) console.error("FB_PAGE_ID / FB_PAGE_ACCESS_TOKEN が未設定のため投稿せず本文を表示します。");
     console.log(message);
@@ -201,4 +233,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, post: post, checkToken: checkToken };
