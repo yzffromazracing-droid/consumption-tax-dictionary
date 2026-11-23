@@ -211,126 +211,30 @@ async function checkToken(pageId, token, version) {
   var exp = d.expires_at ? new Date(d.expires_at * 1000).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) + "（日本時間）" : "なし（期限なし）";
   console.log("トークンの種類：" + (d.type === "PAGE" ? "ページ（Page）" : d.type === "USER" ? "個人（User）" : d.type));
   console.log("トークンの有効期限：" + exp);
-  try {
-    var igId = await igAccountId(pageId, token, version);
-    var scopes = d.scopes || [];
-    console.log("Instagram：" + (igId ? "連携あり" : "連携なし（Instagram には投稿しません）") +
-      (igId ? "／投稿の権限（instagram_content_publish）" + (scopes.indexOf("instagram_content_publish") !== -1 ? "あり" : "なし（トークンの取り直しが必要）") : ""));
-  } catch (e) {
-    console.log("Instagram：確認できません（" + e.message + "）");
-  }
   return same && d.type === "PAGE" && !d.expires_at;
 }
 
-// 今日（日本時間）すでに「【今日の消費税区分】」の投稿がページにあるかを調べ、あればその投稿を返す。
+// 今日（日本時間）すでに「【今日の消費税区分】」の投稿がページにあるかを調べる。
 // GitHub の定期実行の遅れに備えて別の仕組みから強制実行することがあるので、二重投稿を防ぐ。
-// 調べられなかったときは null（投稿する）を返す。
-async function findTodayPost(pageId, token, version, now) {
+// 調べられなかったときは false（投稿する）を返す。
+async function alreadyPostedToday(pageId, token, version, now) {
   var url = "https://graph.facebook.com/" + (version || "v23.0") + "/" + encodeURIComponent(pageId) +
-    "/published_posts?fields=created_time,message,attachments{target{id},type}&limit=10&access_token=" + encodeURIComponent(token);
+    "/published_posts?fields=created_time,message&limit=10&access_token=" + encodeURIComponent(token);
   try {
     var json = await (await fetch(url)).json();
     if (json.error || !Array.isArray(json.data)) {
       console.log("今日の投稿の確認：できませんでした" + (json.error ? "（" + json.error.message + "）" : "") + "。投稿を続けます。");
-      return null;
+      return false;
     }
     var today = dayIndex(now || new Date());
-    return json.data.filter(function (p) {
+    return json.data.some(function (p) {
       return p.message && p.message.indexOf("【今日の消費税区分】") === 0 &&
         dayIndex(new Date(p.created_time)) === today;
-    })[0] || null;
+    });
   } catch (e) {
     console.log("今日の投稿の確認：できませんでした（" + e.message + "）。投稿を続けます。");
-    return null;
-  }
-}
-
-async function alreadyPostedToday(pageId, token, version, now) {
-  return !!(await findTodayPost(pageId, token, version, now));
-}
-
-// 投稿の写真のIDを取り出す（写真投稿の attachments の target）
-function photoIdOf(fbPost) {
-  var att = fbPost && fbPost.attachments && fbPost.attachments.data && fbPost.attachments.data[0];
-  return att && att.target && att.target.id || null;
-}
-
-// ---- Instagram（Facebook ページに連携したプロアカウントに同じ内容を投稿する） ----
-
-function graph(version) {
-  return "https://graph.facebook.com/" + (version || "v23.0");
-}
-
-// ページに連携した Instagram プロアカウントのID。なければ null
-async function igAccountId(pageId, token, version) {
-  var json = await (await fetch(graph(version) + "/" + encodeURIComponent(pageId) +
-    "?fields=instagram_business_account&access_token=" + encodeURIComponent(token))).json();
-  if (json.error) throw new Error("Instagram の連携を確認できません：" + json.error.message);
-  return json.instagram_business_account && json.instagram_business_account.id || null;
-}
-
-// 今日（日本時間）すでに Instagram に投稿しているか
-async function igAlreadyPostedToday(igId, token, version, now) {
-  var json = await (await fetch(graph(version) + "/" + encodeURIComponent(igId) +
-    "/media?fields=caption,timestamp&limit=10&access_token=" + encodeURIComponent(token))).json();
-  if (json.error || !Array.isArray(json.data)) {
-    console.log("Instagram の今日の投稿の確認：できませんでした" + (json.error ? "（" + json.error.message + "）" : "") + "。投稿を続けます。");
     return false;
   }
-  var today = dayIndex(now || new Date());
-  return json.data.some(function (m) {
-    return m.caption && m.caption.indexOf("【今日の消費税区分】") === 0 && dayIndex(new Date(m.timestamp)) === today;
-  });
-}
-
-// Facebook に上げた写真の公開URL（一番大きいもの）。Instagram はURLから画像を取り込む
-async function fbPhotoUrl(photoId, token, version) {
-  var json = await (await fetch(graph(version) + "/" + encodeURIComponent(photoId) +
-    "?fields=images&access_token=" + encodeURIComponent(token))).json();
-  if (json.error || !Array.isArray(json.images) || !json.images.length) {
-    throw new Error("Facebook の写真のURLを取得できません" + (json.error ? "：" + json.error.message : ""));
-  }
-  return json.images.slice().sort(function (a, b) { return b.width - a.width; })[0].source;
-}
-
-function sleep(ms) {
-  return new Promise(function (r) { setTimeout(r, ms); });
-}
-
-// Instagram に写真を投稿する（コンテナを作り、準備ができたら公開する）
-async function igPost(igId, token, version, imageUrl, caption, waitMs) {
-  var base = graph(version) + "/" + encodeURIComponent(igId);
-  var body = new URLSearchParams({ image_url: imageUrl, caption: caption, access_token: token });
-  var c = await (await fetch(base + "/media", { method: "POST", body: body })).json();
-  if (c.error || !c.id) throw new Error("Instagram API error: " + (c.error ? c.error.message : JSON.stringify(c)));
-  for (var i = 0; i < 20; i++) {
-    var st = await (await fetch(graph(version) + "/" + c.id + "?fields=status_code&access_token=" + encodeURIComponent(token))).json();
-    if (st.status_code === "FINISHED") break;
-    if (st.status_code === "ERROR" || st.error) throw new Error("Instagram が画像を取り込めませんでした" + (st.error ? "：" + st.error.message : ""));
-    await sleep(waitMs === undefined ? 3000 : waitMs);
-  }
-  var pub = await (await fetch(base + "/media_publish", {
-    method: "POST", body: new URLSearchParams({ creation_id: c.id, access_token: token }),
-  })).json();
-  if (pub.error || !pub.id) throw new Error("Instagram API error: " + (pub.error ? pub.error.message : JSON.stringify(pub)));
-  return pub;
-}
-
-// Facebook の今日の写真を、同じ本文で Instagram にも投稿する。連携していなければ何もしない
-async function postToInstagram(pageId, token, version, photoId, caption, itemName) {
-  var igId = await igAccountId(pageId, token, version);
-  if (!igId) {
-    console.log("Instagram：ページに Instagram のプロアカウントが連携されていないため、投稿しません。");
-    return;
-  }
-  if (await igAlreadyPostedToday(igId, token, version)) {
-    console.log("instagram skipped: 今日はすでに Instagram に投稿済みのため、投稿しませんでした（" + itemName + "）");
-    return;
-  }
-  if (!photoId) throw new Error("Instagram：今日の Facebook の投稿に写真がないため、Instagram に投稿できません（Instagram は写真が必要）");
-  var imageUrl = await fbPhotoUrl(photoId, token, version);
-  var res = await igPost(igId, token, version, imageUrl, caption);
-  console.log("instagram posted: " + res.id + " (" + itemName + ")");
 }
 
 async function main() {
@@ -372,21 +276,12 @@ async function main() {
   }
 
   token = await resolveToken(pageId, token, process.env.FB_GRAPH_VERSION);
-  var version = process.env.FB_GRAPH_VERSION;
-  var photoId = null;
-  var todayPost = args.indexOf("--force") === -1 ? await findTodayPost(pageId, token, version) : null;
-  if (todayPost) {
+  if (args.indexOf("--force") === -1 && await alreadyPostedToday(pageId, token, process.env.FB_GRAPH_VERSION)) {
     console.log("skipped: 今日はすでに投稿済みのため、投稿しませんでした（" + item.name + "）");
-    photoId = photoIdOf(todayPost);
-  } else {
-    var result = await post(pageId, token, message, siteUrl, version, imageFile);
-    console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
-    photoId = imageFile ? result.id : null;
+    return;
   }
-  // Instagram にも同じ写真と本文で投稿する（--no-instagram で止められる）
-  if (args.indexOf("--no-instagram") === -1) {
-    await postToInstagram(pageId, token, version, photoId, message, item.name);
-  }
+  var result = await post(pageId, token, message, siteUrl, process.env.FB_GRAPH_VERSION, imageFile);
+  console.log("posted: " + (result.post_id || result.id) + " (" + item.name + (imageFile ? "・写真付き" : "") + ")");
 }
 
 if (require.main === module) {
@@ -396,4 +291,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, ntaLinks: ntaLinks, post: post, checkToken: checkToken, alreadyPostedToday: alreadyPostedToday, findTodayPost: findTodayPost, photoIdOf: photoIdOf, igPost: igPost, postToInstagram: postToInstagram };
+module.exports = { dayIndex: dayIndex, pickItem: pickItem, buildMessage: buildMessage, rateCutNote: rateCutNote, ntaLinks: ntaLinks, post: post, checkToken: checkToken, alreadyPostedToday: alreadyPostedToday };
