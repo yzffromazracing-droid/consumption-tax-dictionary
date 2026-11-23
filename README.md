@@ -76,8 +76,6 @@ GitHub Actions（`.github/workflows/facebook-daily.yml`）が毎日 8:47（日�
 
 GitHub の定期実行は遅れたり動かなかったりするため、8:47 から2時間たっても今日の実行がないときは、Claude の定期実行（毎日 10:47）がワークフローを手動実行して投稿する。同じ日に2回動いても、投稿前に Facebook ページに今日の「【今日の消費税区分】」の投稿があれば投稿しない（`--force` を付けたときを除く）。
 
-Instagram：Facebook ページに Instagram のプロアカウント（ビジネスまたはクリエイター）が連携されていれば、Facebook に上げた写真と同じ本文で Instagram にも投稿する（連携がなければ Facebook だけ）。Instagram も、今日の「【今日の消費税区分】」の投稿があれば二重に投稿しない。トークンには `instagram_basic` と `instagram_content_publish` の権限が必要（`check_token` で連携と権限を確認できる）。
-
 トークンの確認：Actions の「Run workflow」で `check_token` にチェックして実行すると、投稿せずにトークンがページのものか・有効期限（「なし」なら期限なし）をログに出す。
 
 手元での確認：`node scripts/facebook-post.js --dry-run --date=2026-10-12`、`node scripts/facebook-image.js card.svg --date=2026-10-12`（SVGならブラウザで開ける）

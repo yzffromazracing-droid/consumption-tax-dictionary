@@ -110,29 +110,3 @@ test("国税庁の関連ページ（タックスアンサー等・基本通達�
   const k8 = ITEMS.find((i) => i.cat === "k8");
   assert.match(buildMessage(k8, ""), /消費税率引下げ特設サイト：https:\/\/www\.nta\.go\.jp\//);
 });
-
-test("Instagram：連携していれば Facebook の写真と同じ本文で投稿し、今日の投稿があれば投稿しない", async (t) => {
-  const { postToInstagram, photoIdOf } = require("../scripts/facebook-post.js");
-  const now = new Date().toISOString();
-  let igMedia = [];
-  const calls = [];
-  t.mock.method(globalThis, "fetch", async (url, opts) => {
-    const u = String(url);
-    const R = (o) => new Response(JSON.stringify(o));
-    calls.push(((opts && opts.method) || "GET") + " " + u.split("?")[0]);
-    if (u.includes("fields=instagram_business_account")) return R({ instagram_business_account: { id: "IG1" } });
-    if (u.includes("/IG1/media?")) return R({ data: igMedia });
-    if (u.includes("fields=images")) return R({ images: [{ width: 1080, source: "https://cdn/l.jpg" }] });
-    if (u.endsWith("/IG1/media")) { assert.equal(opts.body.get("caption"), "本文"); assert.equal(opts.body.get("image_url"), "https://cdn/l.jpg"); return R({ id: "C1" }); }
-    if (u.includes("/C1?")) return R({ status_code: "FINISHED" });
-    if (u.endsWith("/media_publish")) return R({ id: "M1" });
-    throw new Error("unexpected " + u);
-  });
-  await postToInstagram("P", "t", "v23.0", "PH", "本文", "項目");
-  assert.ok(calls.some((c) => c.endsWith("/IG1/media_publish")));
-  calls.length = 0;
-  igMedia = [{ caption: "【今日の消費税区分】項目", timestamp: now }];
-  await postToInstagram("P", "t", "v23.0", "PH", "本文", "項目");
-  assert.ok(!calls.some((c) => c.startsWith("POST")));
-  assert.equal(photoIdOf({ attachments: { data: [{ target: { id: "PH9" } }] } }), "PH9");
-});
